@@ -2,8 +2,10 @@ import feedparser
 import requests
 from fuzzywuzzy import fuzz, process
 import spacy
+import os
 import json
 import re
+from urllib.parse import urlparse
 
 LOCAL_FEED_PATH = "rss.xml"
 ANILIST_API_URL = "https://graphql.anilist.co"
@@ -47,6 +49,11 @@ def fetch_anilist_titles_and_image(core_title):
             media = data["data"]["Media"]
             titles.extend(filter(None, [media["title"]["romaji"], media["title"]["english"], media["title"]["native"]]))
             image_url = media["coverImage"]["extraLarge"]
+        
+        # Download the image if URL is found
+        if image_url:
+            image_path = download_image(image_url)
+
         return titles, image_url
     except requests.exceptions.HTTPError as http_err:
         print(f"HTTP error occurred: {http_err}")
@@ -54,7 +61,21 @@ def fetch_anilist_titles_and_image(core_title):
         print(f"Other error occurred: {err}")
     return [], None
 
+def download_image(url):
+    # Define the fixed file name for saving the image
+    file_path = os.path.join(os.getcwd(), "backgroundimage.jpg")
 
+    # Download the image
+    try:
+        print(f"Downloading image from: {url}")
+        image_data = requests.get(url).content
+        with open(file_path, "wb") as f:
+            f.write(image_data)
+        print(f"Image saved to: {file_path}")
+        return file_path
+    except Exception as e:
+        print(f"Failed to download image: {e}")
+        return None
 
 def extract_core_title_and_description(full_title, anime_titles):
     separators = [
