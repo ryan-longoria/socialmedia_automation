@@ -1,4 +1,8 @@
 *.psd
+*.mov
+*.mp4
+.aep
+.aet
 *.jpg
 *.json
 rss.xml
