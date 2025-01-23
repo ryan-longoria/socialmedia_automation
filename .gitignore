@@ -6,3 +6,5 @@
 *.jpg
 *.json
 rss.xml
+"Adobe After Effects Auto-Save"/
+__pycache__/
