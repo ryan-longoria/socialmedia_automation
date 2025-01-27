@@ -7,4 +7,5 @@
 *.json
 rss.xml
 "Adobe After Effects Auto-Save"/
+config/
 __pycache__/
