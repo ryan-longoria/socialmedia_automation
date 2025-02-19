@@ -7,7 +7,6 @@ import json
 import re
 from urllib.parse import urlparse
 
-LOCAL_FEED_PATH = "rss.xml"
 ANILIST_API_URL = "https://graphql.anilist.co"
 OUTPUT_JSON_FILE = "most_recent_post.json"
 
@@ -50,7 +49,6 @@ def fetch_anilist_titles_and_image(core_title):
             titles.extend(filter(None, [media["title"]["romaji"], media["title"]["english"], media["title"]["native"]]))
             image_url = media["coverImage"]["extraLarge"]
         
-        # Download the image if URL is found
         if image_url:
             image_path = download_image(image_url)
 
@@ -62,10 +60,8 @@ def fetch_anilist_titles_and_image(core_title):
     return [], None
 
 def download_image(url):
-    # Define the fixed file name for saving the image
     file_path = os.path.join(os.getcwd(), "backgroundimage.jpg")
 
-    # Download the image
     try:
         print(f"Downloading image from: {url}")
         image_data = requests.get(url).content
@@ -125,11 +121,8 @@ def save_to_json(data, filename="most_recent_post.json"):
     print(f"Post saved to {filename}.")
 
 try:
-    print("Parsing local RSS feed...")
-    with open(LOCAL_FEED_PATH, "r", encoding="utf-8") as f:
-        feed_content = f.read()
-    
-    feed = feedparser.parse(feed_content)
+    print("Fetching RSS feed from Anime News Network...")
+    feed = feedparser.parse("https://www.animenewsnetwork.com/newsroom/rss.xml")
     
     print("Extracting the most recent anime post...")
     recent_post = get_most_recent_anime_post(feed)

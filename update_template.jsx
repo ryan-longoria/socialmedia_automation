@@ -1,5 +1,3 @@
-alert("Script started");
-
 var jsonFile = new File("most_recent_post.json");
 
 if (jsonFile.exists) {
