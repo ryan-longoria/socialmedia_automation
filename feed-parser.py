@@ -6,11 +6,16 @@ import os
 import json
 import re
 from urllib.parse import urlparse
+import subprocess
+from PIL import Image
 
 ANILIST_API_URL = "https://graphql.anilist.co"
 OUTPUT_JSON_FILE = "most_recent_post.json"
 
 nlp = spacy.load("en_core_web_sm")
+
+# Set the full path to the ImageMagick executable on your system.
+IMAGE_MAGICK_EXE = r"C:\Program Files\ImageMagick-7.1.1-Q16-HDRI\magick.exe"
 
 def fetch_anilist_titles_and_image(core_title):
     query = """
@@ -49,10 +54,13 @@ def fetch_anilist_titles_and_image(core_title):
             titles.extend(filter(None, [media["title"]["romaji"], media["title"]["english"], media["title"]["native"]]))
             image_url = media["coverImage"]["extraLarge"]
         
+        # Download and convert the image if URL is found
         if image_url:
             image_path = download_image(image_url)
+        else:
+            image_path = None
 
-        return titles, image_url
+        return titles, image_path
     except requests.exceptions.HTTPError as http_err:
         print(f"HTTP error occurred: {http_err}")
     except Exception as err:
@@ -61,14 +69,31 @@ def fetch_anilist_titles_and_image(core_title):
 
 def download_image(url):
     file_path = os.path.join(os.getcwd(), "backgroundimage.jpg")
-
     try:
         print(f"Downloading image from: {url}")
-        image_data = requests.get(url).content
+        response = requests.get(url, stream=True, headers={'User-Agent': 'Mozilla/5.0'})
+        response.raise_for_status()
         with open(file_path, "wb") as f:
-            f.write(image_data)
+            for chunk in response.iter_content(1024):
+                f.write(chunk)
         print(f"Image saved to: {file_path}")
-        return file_path
+        
+        # Check file size (if too small, likely incomplete)
+        file_size = os.path.getsize(file_path)
+        print(f"Downloaded file size: {file_size} bytes")
+        if file_size < 1000:
+            print("Error: File size too small, likely incomplete.")
+            return None
+        
+        # Use ImageMagick to convert the file to a proper JPEG
+        converted_path = os.path.join(os.getcwd(), "backgroundimage_converted.jpg")
+        try:
+            subprocess.run([IMAGE_MAGICK_EXE, file_path, converted_path], check=True)
+            print(f"Converted image saved to: {converted_path}")
+            return converted_path
+        except Exception as e:
+            print(f"ImageMagick conversion failed: {e}")
+            return file_path
     except Exception as e:
         print(f"Failed to download image: {e}")
         return None
@@ -132,10 +157,10 @@ try:
         anime_titles, image_url = fetch_anilist_titles_and_image(recent_post['title'])
         
         core_title, description = extract_core_title_and_description(recent_post['title'], [])
-
+        
         print("Fetching AniList titles and background image...")
         anime_titles, image_url = fetch_anilist_titles_and_image(core_title)
-
+        
         recent_post['title'] = core_title
         recent_post['description'] = description if description else recent_post['description']
         recent_post['image_url'] = image_url

@@ -56,7 +56,7 @@ if (jsonFile.exists) {
             titleLayer.property("Source Text").setValue(postData.title);
             subtitleLayer.property("Source Text").setValue(postData.description);
 
-            var imageFile = new File("backgroundimage.jpg");
+            var imageFile = new File("backgroundimage_converted.jpg");
             if (imageFile.exists) {
                 var importOptions = new ImportOptions(imageFile);
                 var imageFootage = app.project.importFile(importOptions);
