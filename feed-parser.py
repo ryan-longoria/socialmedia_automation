@@ -127,16 +127,20 @@ def extract_core_title_and_description(full_title, anime_titles):
     
     return core_title, description
 
-def get_most_recent_anime_post(feed):
-    for entry in feed.entries:
-        category = entry.get("category", "").lower()
+def get_first_post_if_anime(feed):
+    """
+    Returns the first entry in the feed if its category contains 'anime'.
+    """
+    if feed.entries:
+        first = feed.entries[0]
+        category = first.get("category", "").lower()
         if "anime" in category:
             return {
-                "title": entry.title,
-                "link": entry.link,
-                "description": entry.description,
-                "pubDate": entry.published,
-                "category": category,
+                "title": first.title,
+                "link": first.link,
+                "description": first.description,
+                "pubDate": first.published,
+                "category": first.get("category", ""),
             }
     return None
 
@@ -149,16 +153,19 @@ try:
     print("Fetching RSS feed from Anime News Network...")
     feed = feedparser.parse("https://www.animenewsnetwork.com/newsroom/rss.xml")
     
-    print("Extracting the most recent anime post...")
-    recent_post = get_most_recent_anime_post(feed)
+    print("Checking the very first post for 'Anime' category...")
+    recent_post = get_first_post_if_anime(feed)
     
     if recent_post:
         print("Fetching AniList titles and background image...")
+        # First call using the post title
         anime_titles, image_url = fetch_anilist_titles_and_image(recent_post['title'])
         
+        # Extract core title and description (this can be used to improve the title matching)
         core_title, description = extract_core_title_and_description(recent_post['title'], [])
         
-        print("Fetching AniList titles and background image...")
+        # Optionally, use the core title to query AniList again
+        print("Fetching AniList titles and background image again using the core title...")
         anime_titles, image_url = fetch_anilist_titles_and_image(core_title)
         
         recent_post['title'] = core_title
@@ -169,6 +176,6 @@ try:
         print(recent_post)
         save_to_json(recent_post, OUTPUT_JSON_FILE)
     else:
-        print("No anime-related post found.")
+        print("The first post is not anime-related. Skipping.")
 except Exception as e:
     print(f"Error: {e}")
