@@ -23,4 +23,3 @@ def lambda_handler(event, context):
     )
     
     return {"status": "video_upload_triggered", "ssm_command": response}
-S
