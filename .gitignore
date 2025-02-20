@@ -1,11 +1,3 @@
-*.psd
-*.mov
-*.mp4
-*.aep
-*.aet
-*.jpg
-*.json
-rss.xml
 "Adobe After Effects Auto-Save"/
 config/
 __pycache__/
