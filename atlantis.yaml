@@ -48,3 +48,4 @@ projects:
   apply_requirements: [mergeable, approved, undiverged]
   repo_locks:
     mode: on_plan
+    
