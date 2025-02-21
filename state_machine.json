@@ -1,0 +1,50 @@
+{
+    "Comment": "State machine for automating anime post workflow",
+    "StartAt": "FetchRSS",
+    "States": {
+      "FetchRSS": {
+        "Type": "Task",
+        "Resource": "${aws_lambda_function.fetch_rss.arn}",
+        "ResultPath": "$.rssData",
+        "Next": "CheckPost"
+      },
+      "CheckPost": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Variable": "$.rssData.status",
+            "StringEquals": "anime_post_found",
+            "Next": "ProcessContent"
+          }
+        ],
+        "Default": "EndWorkflow"
+      },
+      "ProcessContent": {
+        "Type": "Task",
+        "Resource": "${aws_lambda_function.process_content.arn}",
+        "ResultPath": "$.processedContent",
+        "Next": "StoreData"
+      },
+      "StoreData": {
+        "Type": "Task",
+        "Resource": "${aws_lambda_function.store_data.arn}",
+        "ResultPath": "$.storeResult",
+        "Next": "RenderVideo"
+      },
+      "RenderVideo": {
+        "Type": "Task",
+        "Resource": "${aws_lambda_function.render_video.arn}",
+        "ResultPath": "$.videoResult",
+        "Next": "SaveVideo"
+      },
+      "SaveVideo": {
+        "Type": "Task",
+        "Resource": "${aws_lambda_function.save_video.arn}",
+        "End": true
+      },
+      "EndWorkflow": {
+        "Type": "Succeed"
+      }
+    }
+  }
+  
