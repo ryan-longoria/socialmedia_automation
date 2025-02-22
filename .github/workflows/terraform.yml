@@ -3,7 +3,7 @@ on:
     types: [opened, synchronize, reopened]
 
 jobs:
-  terraform:
+  setup-secrets:
     runs-on: ubuntu-latest
     env:
       ANIMEUTOPIA_PPROD_TF_VAR_aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
@@ -12,12 +12,5 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
 
-      - name: Terraform Init
-        run: terraform init -backend-config="bucket=${{ secrets.TERRAFORM_BACKEND_BUCKET }}" 
-
-      - name: Terraform Plan
-        run: terraform plan -var-file=tfvars/prod-ue2-animeutopia.tfvars
-
-      - name: Terraform Apply
-        if: github.ref == 'refs/heads/main'
-        run: terraform apply -auto-approve -var-file=tfvars/prod-ue2-animeutopia.tfvars
+      - name: Provide environment secrets
+        run: echo "Secrets supplied for Atlantis"
