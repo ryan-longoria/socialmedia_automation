@@ -1,0 +1,19 @@
+jobs:
+  terraform:
+    runs-on: ubuntu-latest
+    env:
+      ANIMEUTOPIA_PPROD_TF_VAR_aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+      ANIMEUTOPA_PROD_TF_VAR_ec2_instance_id: ${{ secrets.EC2_INSTANCE_ID }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Terraform Init
+        run: terraform init -backend-config="bucket=${{ secrets.TERRAFORM_BACKEND_BUCKET }}" 
+
+      - name: Terraform Plan
+        run: terraform plan -var-file=tfvars/prod-ue2-animeutopia.tfvars
+
+      - name: Terraform Apply
+        if: github.ref == 'refs/heads/main'
+        run: terraform apply -auto-approve -var-file=tfvars/prod-ue2-animeutopia.tfvars
