@@ -39,6 +39,16 @@ resource "aws_lambda_function" "process_content" {
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.8"
   role          = aws_iam_role.lambda_role.arn
+
+  environment {
+    variables = {
+      IMAGE_MAGICK_EXE = "/opt/bin/magick"
+    }
+  }
+
+  layers = [
+    "arn:aws:lambda:us-east-2:481665084477:layer:imagick-layer:1"
+  ]
 }
 
 resource "aws_lambda_function" "store_data" {
