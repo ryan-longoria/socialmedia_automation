@@ -28,7 +28,6 @@ variable "environment" {
 variable "ec2_instance_id" {
   description = "The ID of the Windows EC2 instance with Photoshop installed."
   type        = string
-  default     = "i-022e9bb5447996955"
 }
 
 variable "terraform_backend_bucket" {
