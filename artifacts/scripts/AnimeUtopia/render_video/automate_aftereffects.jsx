@@ -66,7 +66,7 @@ if (jsonFile.exists) {
 
     var postData = JSON.parse(jsonData);
 
-    var projectFile = new File("anime_template.aep"); 
+    var projectFile = new File("/animeutopia/anime_template.aep"); 
     if (projectFile.exists) {
         app.open(projectFile);
 

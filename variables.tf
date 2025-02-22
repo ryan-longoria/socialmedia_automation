@@ -28,11 +28,11 @@ variable "environment" {
 variable "ec2_instance_id" {
   description = "The ID of the Windows EC2 instance with Photoshop installed."
   type        = string
-  default     = "i-your-ec2-instance-id"
+  default     = "i-022e9bb5447996955"
 }
 
 variable "terraform_backend_bucket" {
   description = "The S3 bucket used to store Terraform state."
   type        = string
-  default     = "my-terraform-backend-bucket-unique"
+  default     = "animeutopia-bucket"
 }
