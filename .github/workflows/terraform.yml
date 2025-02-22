@@ -1,3 +1,7 @@
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
 jobs:
   terraform:
     runs-on: ubuntu-latest
