@@ -4,7 +4,7 @@
 
 terraform {
   backend "s3" {
-    bucket = "my-terraform-backend-bucket-unique"
+    bucket = "nonprod-animeutopia-backend-bucket"
     key    = "tfstate/animeutopia/terraform.tfstate"
     region = "us-east-2"
   }
