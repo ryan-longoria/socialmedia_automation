@@ -22,7 +22,7 @@ variable "s3_bucket_name" {
 variable "environment" {
   description = "The environment name (nonprod, prod)."
   type        = string
-  default     = "dev"
+  default     = "nonprod"
 }
 
 variable "ec2_instance_id" {
