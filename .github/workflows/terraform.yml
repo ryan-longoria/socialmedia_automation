@@ -6,8 +6,8 @@ jobs:
   setup-secrets:
     runs-on: ubuntu-latest
     env:
-      ANIMEUTOPIA_PPROD_TF_VAR_aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
-      ANIMEUTOPA_PROD_TF_VAR_ec2_instance_id: ${{ secrets.EC2_INSTANCE_ID }}
+      TF_VAR_aws_account_id: ${{ secrets.AWS_ACCOUNT_ID }}
+      TF_VAR_ec2_instance_id: ${{ secrets.EC2_INSTANCE_ID }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
