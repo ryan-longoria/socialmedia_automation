@@ -4,24 +4,41 @@ workflows:
   nonprod:
     plan:
       steps:
+        - run: /opt/atlantis/bin/fetch-params.sh
         - init:
             extra_args: ["--backend-config", "backends/nonprod-ue2-animeutopia.backend.tfvars", "--reconfigure"]
         - plan:
-            extra_args: ["-var-file", "tfvars/nonprod-ue2-animeutopia.tfvars"]
+            extra_args:
+              - "-var-file=tfvars/nonprod-ue2-animeutopia.tfvars"
+              - "-var-file=/home/atlantis/.atlantis/nonprod-ue2-animeutopia.tfvars"
+
     apply:
       steps:
-        - apply
+        - run: /opt/atlantis/bin/fetch-params.sh
+
+        - apply:
+            extra_args:
+              - "-var-file=tfvars/nonprod-ue2-animeutopia.tfvars"
+              - "-var-file=/home/atlantis/.atlantis/nonprod-ue2-animeutopia.tfvars"
 
   prod:
     plan:
       steps:
+        - run: /opt/atlantis/bin/fetch-params.sh
         - init:
             extra_args: ["--backend-config", "backends/prod-ue2-animeutopia.backend.tfvars", "--reconfigure"]
         - plan:
-            extra_args: ["-var-file", "tfvars/prod-ue2-animeutopia.tfvars"]
+            extra_args:
+              - "-var-file=tfvars/prod-ue2-animeutopia.tfvars"
+              - "-var-file=/home/atlantis/.atlantis/prod-ue2-animeutopia.tfvars"
+
     apply:
       steps:
-        - apply
+        - run: /opt/atlantis/bin/fetch-params.sh
+        - apply:
+            extra_args:
+              - "-var-file=tfvars/prod-ue2-animeutopia.tfvars"
+              - "-var-file=/home/atlantis/.atlantis/prod-ue2-animeutopia.tfvars"
 
 projects:
   - name: nonprod
