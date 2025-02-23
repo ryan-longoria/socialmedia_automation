@@ -12,6 +12,6 @@ provider "aws" {
   }
 
   assume_role {
-    role_arn = "arn:aws:iam::${var.aws_account_id}:role/Atlantis-EC2-Role"
+    role_arn = "arn:aws:iam::851725522400:role/Atlantis-EC2-Role"
   }
 }
