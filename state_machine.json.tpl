@@ -4,7 +4,7 @@
     "States": {
       "FetchRSS": {
         "Type": "Task",
-        "Resource": "${aws_lambda_function.fetch_rss.arn}",
+        "Resource": "${fetch_rss_arn}",
         "ResultPath": "$.rssData",
         "Next": "CheckPost"
       },
@@ -21,30 +21,29 @@
       },
       "ProcessContent": {
         "Type": "Task",
-        "Resource": "${aws_lambda_function.process_content.arn}",
+        "Resource": "${process_content_arn}",
         "ResultPath": "$.processedContent",
         "Next": "StoreData"
       },
       "StoreData": {
         "Type": "Task",
-        "Resource": "${aws_lambda_function.store_data.arn}",
+        "Resource": "${store_data_arn}",
         "ResultPath": "$.storeResult",
         "Next": "RenderVideo"
       },
       "RenderVideo": {
         "Type": "Task",
-        "Resource": "${aws_lambda_function.render_video.arn}",
+        "Resource": "${render_video_arn}",
         "ResultPath": "$.videoResult",
         "Next": "SaveVideo"
       },
       "SaveVideo": {
         "Type": "Task",
-        "Resource": "${aws_lambda_function.save_video.arn}",
+        "Resource": "${save_video_arn}",
         "End": true
       },
       "EndWorkflow": {
         "Type": "Succeed"
       }
     }
-  }
-  
+  }  
