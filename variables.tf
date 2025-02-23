@@ -4,7 +4,7 @@
 
 variable "aws_account_id" {
   description = "The AWS Account ID. Used for configuring the provider and defining ECS resources."
-  type = string
+  type        = string
 }
 
 variable "aws_region" {

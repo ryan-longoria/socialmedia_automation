@@ -4,9 +4,9 @@
 
 terraform {
   backend "s3" {
-    bucket = "nonprod-animeutopia-backend-bucket"
-    key    = "tfstate/animeutopia/terraform.tfstate"
-    region = "us-east-2"
+    bucket   = "nonprod-animeutopia-backend-bucket"
+    key      = "tfstate/animeutopia/terraform.tfstate"
+    region   = "us-east-2"
     role_arn = "arn:aws:iam::851725522400:role/Atlantis-EC2-Role"
   }
 }

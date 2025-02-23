@@ -11,7 +11,7 @@ provider "aws" {
 
   default_tags {
     tags = {
-        DeployedBy = "Terraform"
+      DeployedBy = "Terraform"
     }
   }
 }
