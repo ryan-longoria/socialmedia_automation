@@ -62,6 +62,6 @@ projects:
         - "./backends/*.tfvars"
         - "./tfvars/*.tfvars"
         - "*.tf"
-    apply_requirements: [mergeable, approved, undiverged]
+    apply_requirements: [mergeable, undiverged]
     repo_locks:
       mode: on_plan
