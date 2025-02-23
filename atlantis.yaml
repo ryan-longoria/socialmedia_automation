@@ -4,47 +4,59 @@ workflows:
   nonprod:
     plan:
       steps:
-      - init:
-          extra_args: ["--backend-config", "backends/nonprod-ue2-animeutopia.backend.tfvars", "--reconfigure"]
-      - plan:
-          extra_args: ["-var-file", "tfvars/nonprod-ue2-animeutopia.tfvars"]
+        - init:
+            extra_args: ["--backend-config", "backends/nonprod-ue2-animeutopia.backend.tfvars", "--reconfigure"]
+        - plan:
+            extra_args: ["-var-file", "tfvars/nonprod-ue2-animeutopia.tfvars"]
     apply:
       steps:
-      - apply
+        - apply
 
   prod:
     plan:
       steps:
-      - init:
-          extra_args: ["--backend-config", "backends/prod-ue2-animeutopia.backend.tfvars", "--reconfigure"]
-      - plan:
-          extra_args: ["-var-file", "tfvars/prod-ue2-animeutopia.tfvars"]
+        - init:
+            extra_args: ["--backend-config", "backends/prod-ue2-animeutopia.backend.tfvars", "--reconfigure"]
+        - plan:
+            extra_args: ["-var-file", "tfvars/prod-ue2-animeutopia.tfvars"]
     apply:
       steps:
-      - apply
+        - apply
+
+  fmt:
+    plan:
+      steps:
+        - init
+        - run: terraform fmt -check -diff
 
 projects:
-- name: nonprod
-  workflow: nonprod
-  dir: .
-  autoplan:
-    enabled: true
-    when_modified:
-      - "./backends/*.tfvars"
-      - "./tfvars/*.tfvars"
-      - "*.tf"
-  repo_locks:
-    mode: on_plan
+  - name: nonprod
+    workflow: nonprod
+    dir: .
+    autoplan:
+      enabled: true
+      when_modified:
+        - "./backends/*.tfvars"
+        - "./tfvars/*.tfvars"
+        - "*.tf"
+    repo_locks:
+      mode: on_plan
 
-- name: prod
-  workflow: prod
-  dir: .
-  autoplan:
-    enabled: true
-    when_modified:
-      - "./backends/*.tfvars"
-      - "./tfvars/*.tfvars"
-      - "*.tf"
-  apply_requirements: [mergeable, approved, undiverged]
-  repo_locks:
-    mode: on_plan
+  - name: prod
+    workflow: prod
+    dir: .
+    autoplan:
+      enabled: true
+      when_modified:
+        - "./backends/*.tfvars"
+        - "./tfvars/*.tfvars"
+        - "*.tf"
+    apply_requirements: [mergeable, approved, undiverged]
+    repo_locks:
+      mode: on_plan
+
+  - name: fmt
+    workflow: fmt
+    dir: .
+    autoplan:
+      enabled: false
