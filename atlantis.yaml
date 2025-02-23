@@ -19,7 +19,7 @@ workflows:
               - "-var-file=tfvars/nonprod-ue2-animeutopia.tfvars"
               - "-var-file=/home/atlantis/.atlantis/nonprod-ue2-animeutopia.tfvars"
 
-  nonprod-destroy:
+  nonprod-destroy-workflow:
     plan:
       steps:
         - run: /opt/atlantis/bin/fetch-params.sh
@@ -57,7 +57,7 @@ workflows:
               - "-var-file=tfvars/prod-ue2-animeutopia.tfvars"
               - "-var-file=/home/atlantis/.atlantis/prod-ue2-animeutopia.tfvars"
 
-  prod-destroy:
+  prod-destroy-workflow:
     plan:
       steps:
         - run: /opt/atlantis/bin/fetch-params.sh
