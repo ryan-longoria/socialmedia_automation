@@ -81,6 +81,8 @@ projects:
   - name: nonprod
     workflow: nonprod
     dir: .
+    workspace: default
+    allowed_overrides: [workflow, repo_locks, apply_requirements, workspace]
     autoplan:
       enabled: true
       when_modified:
@@ -93,6 +95,8 @@ projects:
   - name: prod
     workflow: prod
     dir: .
+    workspace: default
+    allowed_overrides: [workflow, repo_locks, apply_requirements, workspace]
     autoplan:
       enabled: true
       when_modified:
