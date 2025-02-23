@@ -81,7 +81,6 @@ projects:
   - name: nonprod
     workflow: nonprod
     dir: .
-    workspace: default
     autoplan:
       enabled: true
       when_modified:
@@ -94,7 +93,6 @@ projects:
   - name: prod
     workflow: prod
     dir: .
-    workspace: default
     autoplan:
       enabled: true
       when_modified:
