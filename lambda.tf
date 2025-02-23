@@ -35,7 +35,7 @@ resource "aws_lambda_function" "fetch_rss" {
 
 resource "aws_lambda_function" "process_content" {
   function_name = "process_content"
-  filename      = "${path.module}/artifacts/scripts/animeutopia/process_content_process_content.zip"
+  filename      = "${path.module}/artifacts/scripts/animeutopia/process_content/process_content.zip"
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.8"
   role          = aws_iam_role.lambda_role.arn
