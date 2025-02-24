@@ -23,6 +23,34 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
 }
 
 #############################
+# IAM Policy for Lambda Functions
+#############################
+resource "aws_iam_policy" "ec2_control_policy" {
+  name        = "anime_ec2_control_policy"
+  description = "Policy to allow Lambda functions to start and stop EC2 instances"
+  policy      = jsonencode({
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Effect: "Allow",
+        Action: [
+          "ec2:StartInstances",
+          "ec2:StopInstances"
+        ],
+        Resource: "arn:aws:ec2:${var.aws_region}:${data.aws_caller_identity.current.account_id}:instance/${var.ec2_instance_id}"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "attach_ec2_control_policy" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.ec2_control_policy.arn
+}
+
+data "aws_caller_identity" "current" {}
+
+#############################
 # Lambda Functions
 #############################
 resource "aws_lambda_function" "fetch_rss" {
@@ -90,6 +118,36 @@ resource "aws_lambda_function" "save_video" {
     variables = {
       INSTANCE_ID   = var.ec2_instance_id,
       TARGET_BUCKET = var.s3_bucket_name
+    }
+  }
+}
+
+resource "aws_lambda_function" "start_instance" {
+  function_name = "start_instance"
+  filename      = "${path.module}/artifacts/scripts/AnimeUtopia/start_instance/start_instance.zip"
+  handler       = "lambda_function.lambda_handler"
+  runtime       = "python3.9"
+  role          = aws_iam_role.lambda_role.arn
+
+  environment {
+    variables = {
+      EC2_INSTANCE_ID = var.ec2_instance_id,
+      AWS_REGION      = var.aws_region
+    }
+  }
+}
+
+resource "aws_lambda_function" "stop_instance" {
+  function_name = "stop_instance"
+  filename      = "${path.module}/artifacts/scripts/AnimeUtopia/stop_instance/stop_instance.zip"
+  handler       = "lambda_function.lambda_handler"
+  runtime       = "python3.9"
+  role          = aws_iam_role.lambda_role.arn
+
+  environment {
+    variables = {
+      EC2_INSTANCE_ID = var.ec2_instance_id,
+      AWS_REGION      = var.aws_region
     }
   }
 }
