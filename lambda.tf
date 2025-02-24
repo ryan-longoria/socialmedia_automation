@@ -132,7 +132,6 @@ resource "aws_lambda_function" "start_instance" {
   environment {
     variables = {
       EC2_INSTANCE_ID = var.ec2_instance_id,
-      AWS_REGION      = var.aws_region
     }
   }
 }
@@ -147,7 +146,6 @@ resource "aws_lambda_function" "stop_instance" {
   environment {
     variables = {
       EC2_INSTANCE_ID = var.ec2_instance_id,
-      AWS_REGION      = var.aws_region
     }
   }
 }
