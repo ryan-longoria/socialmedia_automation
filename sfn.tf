@@ -8,7 +8,7 @@
 resource "aws_iam_role" "step_functions_role" {
   name = "anime_step_functions_role"
   assume_role_policy = jsonencode({
-    Version   = "2012-10-17",
+    Version = "2012-10-17",
     Statement = [{
       Action    = "sts:AssumeRole",
       Effect    = "Allow",
@@ -21,12 +21,12 @@ resource "aws_iam_role" "step_functions_role" {
 resource "aws_iam_policy" "step_functions_policy" {
   name        = "anime_step_functions_policy"
   description = "Policy for Step Functions to invoke Lambda functions"
-  policy      = jsonencode({
-    Version   = "2012-10-17",
+  policy = jsonencode({
+    Version = "2012-10-17",
     Statement = [
       {
-        Effect   = "Allow",
-        Action   = [
+        Effect = "Allow",
+        Action = [
           "lambda:InvokeFunction",
           "lambda:InvokeAsync"
         ],
@@ -53,7 +53,14 @@ resource "aws_iam_role_policy_attachment" "attach_step_functions_policy" {
 resource "aws_sfn_state_machine" "anime_workflow" {
   name     = "anime_workflow"
   role_arn = aws_iam_role.step_functions_role.arn
-  definition = file("${path.module}/state_machine.json")
+
+  definition = templatefile("${path.module}/state_machine.json.tpl", {
+    fetch_rss_arn       = aws_lambda_function.fetch_rss.arn,
+    process_content_arn = aws_lambda_function.process_content.arn,
+    store_data_arn      = aws_lambda_function.store_data.arn,
+    render_video_arn    = aws_lambda_function.render_video.arn,
+    save_video_arn      = aws_lambda_function.save_video.arn
+  })
 }
 
 #############################
@@ -67,7 +74,7 @@ resource "aws_cloudwatch_event_rule" "workflow_schedule" {
 resource "aws_iam_role" "eventbridge_role" {
   name = "eventbridge_step_functions_role"
   assume_role_policy = jsonencode({
-    Version   = "2012-10-17",
+    Version = "2012-10-17",
     Statement = [{
       Action    = "sts:AssumeRole",
       Effect    = "Allow",
@@ -79,8 +86,8 @@ resource "aws_iam_role" "eventbridge_role" {
 resource "aws_iam_policy" "eventbridge_policy" {
   name        = "eventbridge_step_functions_policy"
   description = "Policy for CloudWatch Event to start Step Functions executions"
-  policy      = jsonencode({
-    Version   = "2012-10-17",
+  policy = jsonencode({
+    Version = "2012-10-17",
     Statement = [{
       Effect   = "Allow",
       Action   = "states:StartExecution",

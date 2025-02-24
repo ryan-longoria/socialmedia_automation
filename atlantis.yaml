@@ -4,47 +4,61 @@ workflows:
   nonprod:
     plan:
       steps:
-      - init:
-          extra_args: ["--backend-config", "backends/nonprod-ue2-animeutopia.backend.tfvars", "--reconfigure"]
-      - plan:
-          extra_args: ["-var-file", "tfvars/nonprod-ue2-animeutopia.tfvars"]
+        - run: /opt/atlantis/bin/fetch-params.sh
+        - init:
+            extra_args: ["--backend-config", "backends/nonprod-ue2-animeutopia.backend.tfvars", "--reconfigure"]
+        - plan:
+            extra_args:
+              - "-var-file=tfvars/nonprod-ue2-animeutopia.tfvars"
+              - "-var-file=/home/atlantis/.atlantis/nonprod-ue2-animeutopia.tfvars"
     apply:
       steps:
-      - apply
+        - run: /opt/atlantis/bin/fetch-params.sh
+        - apply:
+            extra_args:
+              - "-var-file=tfvars/nonprod-ue2-animeutopia.tfvars"
+              - "-var-file=/home/atlantis/.atlantis/nonprod-ue2-animeutopia.tfvars"
 
   prod:
     plan:
       steps:
-      - init:
-          extra_args: ["--backend-config", "backends/prod-ue2-animeutopia.backend.tfvars", "--reconfigure"]
-      - plan:
-          extra_args: ["-var-file", "tfvars/prod-ue2-animeutopia.tfvars"]
+        - run: /opt/atlantis/bin/fetch-params.sh
+        - init:
+            extra_args: ["--backend-config", "backends/prod-ue2-animeutopia.backend.tfvars", "--reconfigure"]
+        - plan:
+            extra_args:
+              - "-var-file=tfvars/prod-ue2-animeutopia.tfvars"
+              - "-var-file=/home/atlantis/.atlantis/prod-ue2-animeutopia.tfvars"
     apply:
       steps:
-      - apply
+        - run: /opt/atlantis/bin/fetch-params.sh
+        - apply:
+            extra_args:
+              - "-var-file=tfvars/prod-ue2-animeutopia.tfvars"
+              - "-var-file=/home/atlantis/.atlantis/prod-ue2-animeutopia.tfvars"
 
 projects:
-- name: nonprod
-  workflow: nonprod
-  dir: .
-  autoplan:
-    enabled: true
-    when_modified:
-      - "./backends/*.tfvars"
-      - "./tfvars/*.tfvars"
-      - "*.tf"
-  repo_locks:
-    mode: on_plan
+  - name: nonprod
+    workflow: nonprod
+    dir: .
+    autoplan:
+      enabled: true
+      when_modified:
+        - "./backends/*.tfvars"
+        - "./tfvars/*.tfvars"
+        - "*.tf"
+    repo_locks:
+      mode: on_plan
 
-- name: prod
-  workflow: prod
-  dir: .
-  autoplan:
-    enabled: true
-    when_modified:
-      - "./backends/*.tfvars"
-      - "./tfvars/*.tfvars"
-      - "*.tf"
-  apply_requirements: [mergeable, approved, undiverged]
-  repo_locks:
-    mode: on_plan
+  - name: prod
+    workflow: prod
+    dir: .
+    autoplan:
+      enabled: true
+      when_modified:
+        - "./backends/*.tfvars"
+        - "./tfvars/*.tfvars"
+        - "*.tf"
+    apply_requirements: [mergeable, undiverged]
+    repo_locks:
+      mode: on_plan

@@ -27,7 +27,7 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
 #############################
 resource "aws_lambda_function" "fetch_rss" {
   function_name = "fetch_rss"
-  filename      = "${path.module}/lambda/fetch_rss.zip"
+  filename      = "${path.module}/artifacts/scripts/AnimeUtopia/fetch_rss/fetch_rss.zip"
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.8"
   role          = aws_iam_role.lambda_role.arn
@@ -35,7 +35,7 @@ resource "aws_lambda_function" "fetch_rss" {
 
 resource "aws_lambda_function" "process_content" {
   function_name = "process_content"
-  filename      = "${path.module}/lambda/process_content.zip"
+  filename      = "${path.module}/artifacts/scripts/AnimeUtopia/process_content/process_content.zip"
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.8"
   role          = aws_iam_role.lambda_role.arn
@@ -53,7 +53,7 @@ resource "aws_lambda_function" "process_content" {
 
 resource "aws_lambda_function" "store_data" {
   function_name = "store_data"
-  filename      = "${path.module}/lambda/store_data.zip"
+  filename      = "${path.module}/artifacts/scripts/AnimeUtopia/store_data/store_data.zip"
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.8"
   role          = aws_iam_role.lambda_role.arn
@@ -67,7 +67,7 @@ resource "aws_lambda_function" "store_data" {
 
 resource "aws_lambda_function" "render_video" {
   function_name = "render_video"
-  filename      = "${path.module}/lambda/render_video.zip"
+  filename      = "${path.module}/artifacts/scripts/AnimeUtopia/render_video/render_video.zip"
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.8"
   role          = aws_iam_role.lambda_role.arn
@@ -79,10 +79,9 @@ resource "aws_lambda_function" "render_video" {
   }
 }
 
-# New Lambda to save the video to S3
 resource "aws_lambda_function" "save_video" {
   function_name = "save_video"
-  filename      = "${path.module}/lambda/save_video.zip"
+  filename      = "${path.module}/artifacts/scripts/AnimeUtopia/save_video/save_video.zip"
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.8"
   role          = aws_iam_role.lambda_role.arn

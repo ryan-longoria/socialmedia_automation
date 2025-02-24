@@ -4,7 +4,7 @@
 
 variable "aws_account_id" {
   description = "The AWS Account ID. Used for configuring the provider and defining ECS resources."
-  type = string
+  type        = string
 }
 
 variable "aws_region" {
@@ -16,23 +16,22 @@ variable "aws_region" {
 variable "s3_bucket_name" {
   description = "The name of the S3 bucket to store media assets."
   type        = string
-  default     = "my-anime-media-bucket-unique"
+  default     = "animeutopia-media-bucket"
 }
 
 variable "environment" {
-  description = "The environment name (e.g., dev, prod)."
+  description = "The environment name (nonprod, prod)."
   type        = string
-  default     = "dev"
+  default     = "nonprod"
 }
 
 variable "ec2_instance_id" {
   description = "The ID of the Windows EC2 instance with Photoshop installed."
   type        = string
-  default     = "i-022e9bb5447996955"
 }
 
 variable "terraform_backend_bucket" {
   description = "The S3 bucket used to store Terraform state."
   type        = string
-  default     = "animeutopia-bucket"
+  default     = "animeutopia-backend-bucket"
 }
