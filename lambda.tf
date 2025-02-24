@@ -187,3 +187,17 @@ resource "aws_lambda_function" "notify_post" {
     }
   }
 }
+
+resource "aws_lambda_function" "upload_project" {
+  function_name = "upload_project"
+  filename      = "${path.module}/artifacts/scripts/AnimeUtopia/upload_project/upload_project.zip"
+  handler       = "upload_project.lambda_handler"
+  runtime       = "python3.9"
+  role          = aws_iam_role.lambda_role.arn
+
+  environment {
+    variables = {
+      TARGET_BUCKET = var.s3_bucket_name
+    }
+  }
+}
