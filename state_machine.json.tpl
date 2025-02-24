@@ -53,6 +53,12 @@
       "Type": "Task",
       "Resource": "${stop_instance_arn}",
       "ResultPath": "$.ec2StopResult",
+      "Next": "NotifyUser"
+    },
+    "NotifyUser": {
+      "Type": "Task",
+      "Resource": "${notify_post_arn}",
+      "ResultPath": "$.notificationResult",
       "End": true
     },
     "EndWorkflow": {

@@ -37,7 +37,8 @@ resource "aws_iam_policy" "step_functions_policy" {
           aws_lambda_function.render_video.arn,
           aws_lambda_function.save_video.arn,
           aws_lambda_function.start_instance.arn,
-          aws_lambda_function.stop_instance.arn
+          aws_lambda_function.stop_instance.arn,
+          aws_lambda_function.notify_post.arn
         ]
       }
     ]
@@ -63,7 +64,8 @@ resource "aws_sfn_state_machine" "anime_workflow" {
     render_video_arn    = aws_lambda_function.render_video.arn,
     save_video_arn      = aws_lambda_function.save_video.arn,
     start_instance_arn  = aws_lambda_function.start_instance.arn,
-    stop_instance_arn   = aws_lambda_function.stop_instance.arn
+    stop_instance_arn   = aws_lambda_function.stop_instance.arn,
+    notify_post_arn     = aws_lambda_function.notify_post.arn
   })
 }
 
