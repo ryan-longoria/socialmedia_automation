@@ -181,8 +181,9 @@ resource "aws_lambda_function" "notify_post" {
 
   environment {
     variables = {
-      SNS_TOPIC_ARN = aws_sns_topic.anime_notifications.arn,
-      TARGET_BUCKET = var.s3_bucket_name
+      SNS_TOPIC_ARN      = aws_sns_topic.anime_notifications.arn,
+      TARGET_BUCKET      = var.s3_bucket_name,
+      UPLOAD_PROJECT_LAMBDA = aws_lambda_function.upload_project.arn
     }
   }
 }

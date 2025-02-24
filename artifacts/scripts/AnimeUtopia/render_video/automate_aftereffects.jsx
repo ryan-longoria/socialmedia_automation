@@ -21,7 +21,6 @@ function downloadFromUrl(url, localPath) {
             socket.write(request);
             var response = socket.read(999999);
             socket.close();
-            // Split HTTP headers from content
             var parts = response.split("\r\n\r\n");
             if (parts.length < 2) {
                 throw new Error("Invalid HTTP response.");
@@ -44,17 +43,14 @@ function downloadFromUrl(url, localPath) {
     }
 }
 
-// Define the S3 URL (update with your bucket name and region as needed)
-var s3JsonUrl = "https://your-s3-bucket.s3.amazonaws.com/most_recent_post.json";
+var s3JsonUrl = "https://prod-animeutopia-media-bucket.s3.amazonaws.com/most_recent_post.json";
 var localJsonPath = "most_recent_post.json";
 
-// Download the JSON file from S3 if it does not exist locally
 var jsonFile = new File(localJsonPath);
 if (!jsonFile.exists) {
     var success = downloadFromUrl(s3JsonUrl, localJsonPath);
     if (!success) {
         alert("Failed to download JSON from S3.");
-        // Exit script if JSON cannot be obtained
         return;
     }
 }
@@ -152,6 +148,14 @@ if (jsonFile.exists) {
             outputModule.audioCodec = "AAC"; 
 
             renderQueue.render();
+
+            try {
+                var exportFile = new File("anime_template_exported.aep");
+                app.project.save(exportFile);
+            } catch (exportError) {
+                alert("Error exporting project file: " + exportError.message);
+            }
+
         } catch (e) {
             alert("Error: " + e.message);
         }
