@@ -29,7 +29,7 @@ resource "aws_lambda_function" "fetch_rss" {
   function_name = "fetch_rss"
   filename      = "${path.module}/artifacts/scripts/AnimeUtopia/fetch_rss/fetch_rss.zip"
   handler       = "lambda_function.lambda_handler"
-  runtime       = "python3.8"
+  runtime       = "python3.9"
   role          = aws_iam_role.lambda_role.arn
 }
 
@@ -37,7 +37,7 @@ resource "aws_lambda_function" "process_content" {
   function_name = "process_content"
   filename      = "${path.module}/artifacts/scripts/AnimeUtopia/process_content/process_content.zip"
   handler       = "lambda_function.lambda_handler"
-  runtime       = "python3.8"
+  runtime       = "python3.9"
   role          = aws_iam_role.lambda_role.arn
 
   environment {
@@ -55,7 +55,7 @@ resource "aws_lambda_function" "store_data" {
   function_name = "store_data"
   filename      = "${path.module}/artifacts/scripts/AnimeUtopia/store_data/store_data.zip"
   handler       = "lambda_function.lambda_handler"
-  runtime       = "python3.8"
+  runtime       = "python3.9"
   role          = aws_iam_role.lambda_role.arn
 
   environment {
@@ -69,7 +69,7 @@ resource "aws_lambda_function" "render_video" {
   function_name = "render_video"
   filename      = "${path.module}/artifacts/scripts/AnimeUtopia/render_video/render_video.zip"
   handler       = "lambda_function.lambda_handler"
-  runtime       = "python3.8"
+  runtime       = "python3.9"
   role          = aws_iam_role.lambda_role.arn
 
   environment {
@@ -83,7 +83,7 @@ resource "aws_lambda_function" "save_video" {
   function_name = "save_video"
   filename      = "${path.module}/artifacts/scripts/AnimeUtopia/save_video/save_video.zip"
   handler       = "lambda_function.lambda_handler"
-  runtime       = "python3.8"
+  runtime       = "python3.9"
   role          = aws_iam_role.lambda_role.arn
 
   environment {
