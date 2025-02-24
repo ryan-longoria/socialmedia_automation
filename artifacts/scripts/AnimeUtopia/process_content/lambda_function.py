@@ -188,13 +188,10 @@ def lambda_handler(event, context):
     post = event.get("post", {})
     full_title = post.get("title", "")
 
-    # First call using the raw title (for logging or initial query)
     _ = fetch_anilist_titles_and_image(full_title)
 
-    # Refine the title and description; assuming anime_titles is empty if not provided
     core_title, description = extract_core_title_and_description(full_title, [])
 
-    # Second call with the refined title to get image and title variants
     anime_titles, image_path = fetch_anilist_titles_and_image(core_title)
 
     post["title"] = core_title
