@@ -48,6 +48,28 @@ resource "aws_iam_role_policy_attachment" "attach_ec2_control_policy" {
   policy_arn = aws_iam_policy.ec2_control_policy.arn
 }
 
+resource "aws_iam_policy" "sns_publish_policy" {
+  name        = "anime_sns_publish_policy"
+  description = "Policy to allow Lambda functions to publish to SNS topics for notifications"
+  policy      = jsonencode({
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Effect: "Allow",
+        Action: [
+          "sns:Publish"
+        ],
+        Resource: aws_sns_topic.anime_notifications.arn
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "attach_sns_publish_policy" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.sns_publish_policy.arn
+}
+
 data "aws_caller_identity" "current" {}
 
 #############################
@@ -131,7 +153,7 @@ resource "aws_lambda_function" "start_instance" {
 
   environment {
     variables = {
-      EC2_INSTANCE_ID = var.ec2_instance_id,
+      EC2_INSTANCE_ID = var.ec2_instance_id
     }
   }
 }
@@ -145,7 +167,22 @@ resource "aws_lambda_function" "stop_instance" {
 
   environment {
     variables = {
-      EC2_INSTANCE_ID = var.ec2_instance_id,
+      EC2_INSTANCE_ID = var.ec2_instance_id
+    }
+  }
+}
+
+resource "aws_lambda_function" "notify_post" {
+  function_name = "notify_post"
+  filename      = "${path.module}/artifacts/scripts/AnimeUtopia/notify_post/notify_post.zip"
+  handler       = "lambda_function.lambda_handler"
+  runtime       = "python3.9"
+  role          = aws_iam_role.lambda_role.arn
+
+  environment {
+    variables = {
+      SNS_TOPIC_ARN = aws_sns_topic.anime_notifications.arn,
+      TARGET_BUCKET = var.s3_bucket_name
     }
   }
 }
