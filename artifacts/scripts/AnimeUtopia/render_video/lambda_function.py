@@ -1,6 +1,6 @@
 import boto3
 import json
-
+import os
 
 def lambda_handler(event, context):
     """Trigger the video rendering process on a Windows EC2 instance using SSM.
@@ -14,12 +14,13 @@ def lambda_handler(event, context):
     """
     post = event.get("post", {})
     ssm = boto3.client('ssm')
+    instance_id = os.environ.get("INSTANCE_ID")
+
     response = ssm.send_command(
-        InstanceIds=['i-your-ec2-instance-id'],
+        InstanceIds=[instance_id],
         DocumentName='AWS-RunShellScript',
         Parameters={'commands': [
-            'cd C:\\path\\to\\your\\aftereffects\\scripts',
-            f'node render_script.js \'{json.dumps(post)}\''
+            'afterfx.exe -r automate_aftereffects.jsx'
         ]}
     )
     return {"status": "video_render_triggered", "ssm_command": response}
