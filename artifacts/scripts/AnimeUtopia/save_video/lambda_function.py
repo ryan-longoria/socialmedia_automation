@@ -5,11 +5,11 @@ import boto3
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-
 def lambda_handler(event, context):
     """
     Trigger the Windows EC2 instance via SSM to upload the rendered video
-    (anime_post.mp4) to the designated S3 bucket.
+    (anime_post.mp4) and the After Effects project file (anime_template_exported.aep)
+    to the designated S3 bucket. The project file is stored under the 'exports/' prefix.
     """
     instance_id = os.environ.get("INSTANCE_ID")
     target_bucket = os.environ.get("TARGET_BUCKET")
@@ -26,7 +26,8 @@ def lambda_handler(event, context):
 
     ssm = boto3.client("ssm")
     commands = [
-        f'aws s3 cp "anime_post.mp4" "s3://{target_bucket}"'
+        f'aws s3 cp "anime_post.mp4" "s3://{target_bucket}/anime_post.mp4"',
+        f'aws s3 cp "anime_template_exported.aep" "s3://{target_bucket}/exports/anime_template_exported.aep"'
     ]
 
     try:
