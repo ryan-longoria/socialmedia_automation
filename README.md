@@ -23,6 +23,7 @@ The project leverages AWS and infrastructure-as-code (Terraform) to manage its c
 
 ## Project Structure
 
+```
 FeedMatrix/
 ├── artifacts/
 │   ├── adobe/
@@ -42,6 +43,7 @@ FeedMatrix/
 ├── atlantis.yaml                     # Atlantis configuration for CI/CD with Terraform
 ├── tfvars/                           # Terraform variable files for different environments
 └── backends/                         # Terraform backend configuration files
+```
 
 ## Usage
 
