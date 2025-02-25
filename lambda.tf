@@ -46,13 +46,13 @@ resource "aws_iam_policy" "ec2_control_policy" {
 resource "aws_iam_policy" "ssm_send_command_policy" {
   name        = "anime_ssm_send_command_policy"
   description = "Policy to allow Lambda functions to send SSM commands on EC2 instances"
-  policy      = jsonencode({
-    Version   : "2012-10-17",
+  policy = jsonencode({
+    Version : "2012-10-17",
     Statement : [
       {
-        Effect   : "Allow",
-        Action   : "ssm:SendCommand",
-        Resource = "*"  // You could scope this further to your EC2 instance if needed.
+        Effect : "Allow",
+        Action : "ssm:SendCommand",
+        Resource = "*" // You could scope this further to your EC2 instance if needed.
       }
     ]
   })

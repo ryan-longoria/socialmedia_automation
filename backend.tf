@@ -1,5 +1,5 @@
 ################################################################################
-## Empty Backend Declaration - Configured by `--backend-config=backends/...`
+## Backend Declaration - Configured by `--backend-config=backends/...`
 ################################################################################
 
 terraform {
