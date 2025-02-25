@@ -81,6 +81,7 @@ resource "aws_lambda_function" "fetch_rss" {
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.9"
   role          = aws_iam_role.lambda_role.arn
+  timeout       = 10
 }
 
 resource "aws_lambda_function" "process_content" {
@@ -89,6 +90,7 @@ resource "aws_lambda_function" "process_content" {
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.9"
   role          = aws_iam_role.lambda_role.arn
+  timeout       = 10
 
   environment {
     variables = {
@@ -107,6 +109,7 @@ resource "aws_lambda_function" "store_data" {
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.9"
   role          = aws_iam_role.lambda_role.arn
+  timeout       = 10
 
   environment {
     variables = {
@@ -121,6 +124,7 @@ resource "aws_lambda_function" "render_video" {
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.9"
   role          = aws_iam_role.lambda_role.arn
+  timeout       = 10
 
   environment {
     variables = {
@@ -135,6 +139,7 @@ resource "aws_lambda_function" "save_video" {
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.9"
   role          = aws_iam_role.lambda_role.arn
+  timeout       = 10
 
   environment {
     variables = {
@@ -150,6 +155,7 @@ resource "aws_lambda_function" "start_instance" {
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.9"
   role          = aws_iam_role.lambda_role.arn
+  timeout       = 10
 
   environment {
     variables = {
@@ -164,6 +170,7 @@ resource "aws_lambda_function" "stop_instance" {
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.9"
   role          = aws_iam_role.lambda_role.arn
+  timeout       = 10
 
   environment {
     variables = {
@@ -178,6 +185,7 @@ resource "aws_lambda_function" "notify_post" {
   handler       = "lambda_function.lambda_handler"
   runtime       = "python3.9"
   role          = aws_iam_role.lambda_role.arn
+  timeout       = 10
 
   environment {
     variables = {
