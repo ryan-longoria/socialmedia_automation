@@ -187,12 +187,12 @@ def lambda_handler(event, context):
     """
     post = event.get("post", {})
     full_title = post.get("title", "")
+    if not full_title:
+        return {"status": "error", "error": "No title provided in post."}
 
-    _ = fetch_anilist_titles_and_image(full_title)
+    anime_titles, image_path = fetch_anilist_titles_and_image(full_title)
 
-    core_title, description = extract_core_title_and_description(full_title, [])
-
-    anime_titles, image_path = fetch_anilist_titles_and_image(core_title)
+    core_title, description = extract_core_title_and_description(full_title, anime_titles)
 
     post["title"] = core_title
     post["description"] = description if description else post.get("description", "")
