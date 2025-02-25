@@ -8,7 +8,7 @@
 resource "aws_iam_role" "lambda_role" {
   name = "anime_lambda_role"
   assume_role_policy = jsonencode({
-    Version   = "2012-10-17",
+    Version = "2012-10-17",
     Statement = [{
       Action    = "sts:AssumeRole",
       Effect    = "Allow",
@@ -28,16 +28,16 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
 resource "aws_iam_policy" "ec2_control_policy" {
   name        = "anime_ec2_control_policy"
   description = "Policy to allow Lambda functions to start and stop EC2 instances"
-  policy      = jsonencode({
-    Version: "2012-10-17",
-    Statement: [
+  policy = jsonencode({
+    Version : "2012-10-17",
+    Statement : [
       {
-        Effect: "Allow",
-        Action: [
+        Effect : "Allow",
+        Action : [
           "ec2:StartInstances",
           "ec2:StopInstances"
         ],
-        Resource: "arn:aws:ec2:${var.aws_region}:${data.aws_caller_identity.current.account_id}:instance/${var.ec2_instance_id}"
+        Resource : "arn:aws:ec2:${var.aws_region}:${data.aws_caller_identity.current.account_id}:instance/${var.ec2_instance_id}"
       }
     ]
   })
@@ -51,15 +51,15 @@ resource "aws_iam_role_policy_attachment" "attach_ec2_control_policy" {
 resource "aws_iam_policy" "sns_publish_policy" {
   name        = "anime_sns_publish_policy"
   description = "Policy to allow Lambda functions to publish to SNS topics for notifications"
-  policy      = jsonencode({
-    Version: "2012-10-17",
-    Statement: [
+  policy = jsonencode({
+    Version : "2012-10-17",
+    Statement : [
       {
-        Effect: "Allow",
-        Action: [
+        Effect : "Allow",
+        Action : [
           "sns:Publish"
         ],
-        Resource: aws_sns_topic.anime_notifications.arn
+        Resource : aws_sns_topic.anime_notifications.arn
       }
     ]
   })

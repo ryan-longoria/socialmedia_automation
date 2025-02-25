@@ -1,5 +1,10 @@
-import boto3
 import os
+import logging
+import boto3
+
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
 
 def lambda_handler(event, context):
     """
@@ -18,20 +23,22 @@ def lambda_handler(event, context):
     """
     instance_id = os.environ.get("EC2_INSTANCE_ID")
     region = os.environ.get("AWS_REGION", "us-east-2")
-    
-    ec2 = boto3.client('ec2', region_name=region)
-    
+
+    if not instance_id:
+        error_msg = "EC2_INSTANCE_ID environment variable not set."
+        logger.error(error_msg)
+        return {"status": "error", "error": error_msg}
+
+    ec2 = boto3.client("ec2", region_name=region)
+
     try:
         response = ec2.start_instances(InstanceIds=[instance_id])
-        print(f"Starting instance {instance_id}: {response}")
+        logger.info("Starting instance %s: %s", instance_id, response)
         return {
             "status": "instance_started",
             "instance_id": instance_id,
-            "response": response
+            "response": response,
         }
     except Exception as e:
-        print(f"Error starting instance {instance_id}: {e}")
-        return {
-            "status": "error",
-            "error": str(e)
-        }
+        logger.exception("Error starting instance %s: %s", instance_id, e)
+        return {"status": "error", "error": str(e)}

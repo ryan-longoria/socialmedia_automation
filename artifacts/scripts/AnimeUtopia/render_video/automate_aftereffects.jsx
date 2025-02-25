@@ -1,4 +1,22 @@
 /**
+ * Custom logging function to output messages to the ExtendScript console and a log file.
+ *
+ * @param {string} level - The log level (e.g., "INFO", "ERROR").
+ * @param {string} message - The log message.
+ */
+function logMessage(level, message) {
+    var logStr = "[" + level + "] " + message;
+    $.writeln(logStr);
+
+    // Write to a log file in the user's home directory
+    var logFile = new File("~/after_effects_log.txt");
+    if (logFile.open("a")) {
+        logFile.writeln(logStr);
+        logFile.close();
+    }
+}
+
+/**
  * Downloads a file from a URL using a basic HTTP GET via a Socket.
  * This function assumes the file is publicly accessible.
  *
@@ -33,12 +51,13 @@ function downloadFromUrl(url, localPath) {
             }
             file.write(content);
             file.close();
+            logMessage("INFO", "File downloaded successfully from: " + url);
             return true;
         } else {
             throw new Error("Unable to open socket connection.");
         }
     } catch(e) {
-        alert("Download failed: " + e.message);
+        logMessage("ERROR", "Download failed: " + e.message);
         return false;
     }
 }
@@ -50,7 +69,7 @@ var jsonFile = new File(localJsonPath);
 if (!jsonFile.exists) {
     var success = downloadFromUrl(s3JsonUrl, localJsonPath);
     if (!success) {
-        alert("Failed to download JSON from S3.");
+        logMessage("ERROR", "Failed to download JSON from S3.");
         return;
     }
 }
@@ -138,7 +157,6 @@ if (jsonFile.exists) {
             var rqItem = renderQueue.items.add(comp);
 
             var outputModule = rqItem.outputModule(1);
-
             outputModule.file = new File("anime_post.mp4");
 
             outputModule.format = "QuickTime";
@@ -148,20 +166,22 @@ if (jsonFile.exists) {
             outputModule.audioCodec = "AAC"; 
 
             renderQueue.render();
+            logMessage("INFO", "Render complete for composition: " + compName);
 
             try {
                 var exportFile = new File("anime_template_exported.aep");
                 app.project.save(exportFile);
+                logMessage("INFO", "Project file exported to: " + exportFile.fsName);
             } catch (exportError) {
-                alert("Error exporting project file: " + exportError.message);
+                logMessage("ERROR", "Error exporting project file: " + exportError.message);
             }
 
         } catch (e) {
-            alert("Error: " + e.message);
+            logMessage("ERROR", "Processing error: " + e.message);
         }
     } else {
-        alert("After Effects project file (.aep) not found.");
+        logMessage("ERROR", "After Effects project file (.aep) not found.");
     }
 } else {
-    alert("JSON file not found.");
+    logMessage("ERROR", "JSON file not found.");
 }
