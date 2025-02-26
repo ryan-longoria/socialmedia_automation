@@ -80,9 +80,7 @@ projects:
     autoplan:
       enabled: true
       when_modified:
-        - "./accounts/animeutopia-nonprod/backends/*.tfvars"
-        - "./accounts/animeutopia-nonprod/tfvars/*.tfvars"
-        - "./accounts/animeutopia/*.tf"
+        - "accounts/animeutopia/*.tf"
     repo_locks:
       mode: on_plan
 
@@ -92,9 +90,7 @@ projects:
     autoplan:
       enabled: true
       when_modified:
-        - "./accounts/animeutopia-prod/backends/*.tfvars"
-        - "./accounts/animeutopia-prod/tfvars/*.tfvars"
-        - "./accounts/animeutopia/*.tf"
+        - "accounts/animeutopia/*.tf"
     apply_requirements: [mergeable, undiverged]
     repo_locks:
       mode: on_plan
@@ -105,9 +101,7 @@ projects:
     autoplan:
       enabled: true
       when_modified:
-        - "./accounts/sharedservices-nonprod/backends/*.tfvars"
-        - "./accounts/sharedservices-nonprod/tfvars/*.tfvars"
-        - "./accounts/sharedservices-nonprod/*.tf"
+        - "accounts/sharedservices-nonprod/*.tf"
     repo_locks:
       mode: on_plan
 
@@ -117,9 +111,7 @@ projects:
     autoplan:
       enabled: true
       when_modified:
-        - "./accounts/sharedservices-prod/backends/*.tfvars"
-        - "./accounts/sharedservices-prod/tfvars/*.tfvars"
-        - "./accounts/sharedservices-prod/*.tf"
+        - "accounts/sharedservices-prod/*.tf"
     apply_requirements: [mergeable, undiverged]
     repo_locks:
       mode: on_plan
