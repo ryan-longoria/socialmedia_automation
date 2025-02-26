@@ -1,6 +1,7 @@
 import os
 import logging
 import boto3
+import time
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
@@ -58,3 +59,4 @@ def lambda_handler(event, context):
     except Exception as e:
         logger.exception("Failed to send SSM command: %s", e)
         return {"error": f"Failed to send SSM command: {e}"}
+    
