@@ -80,7 +80,7 @@ projects:
     autoplan:
       enabled: true
       when_modified:
-        - "accounts/animeutopia-nonprod/*"
+        - "./accounts/animeutopia-nonprod/*"
     repo_locks:
       mode: on_plan
 
@@ -90,7 +90,7 @@ projects:
     autoplan:
       enabled: true
       when_modified:
-        - "accounts/animeutopia-prod/*"
+        - "./accounts/animeutopia-prod/*"
     apply_requirements: [mergeable, undiverged]
     repo_locks:
       mode: on_plan
@@ -101,7 +101,7 @@ projects:
     autoplan:
       enabled: true
       when_modified:
-        - "accounts/sharedservices-nonprod/*"
+        - "./accounts/sharedservices-nonprod/*"
     repo_locks:
       mode: on_plan
 
@@ -111,7 +111,7 @@ projects:
     autoplan:
       enabled: true
       when_modified:
-        - "accounts/sharedservices-prod/*"
+        - "./accounts/sharedservices-prod/*"
     apply_requirements: [mergeable, undiverged]
     repo_locks:
       mode: on_plan
