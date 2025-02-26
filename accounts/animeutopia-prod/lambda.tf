@@ -83,6 +83,31 @@ resource "aws_iam_policy" "ec2_describe_policy" {
   })
 }
 
+resource "aws_iam_policy" "s3_list_and_get_policy" {
+  name        = "anime_s3_list_and_get_policy"
+  description = "Policy to allow Lambda to list the bucket and get objects"
+  policy      = jsonencode({
+    Version: "2012-10-17",
+    Statement: [
+      {
+        Effect: "Allow",
+        Action: ["s3:ListBucket"],
+        Resource: "arn:aws:s3:::prod-animeutopia-media-bucket"
+      },
+      {
+        Effect: "Allow",
+        Action: ["s3:GetObject"],
+        Resource: "arn:aws:s3:::prod-animeutopia-media-bucket/*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "attach_s3_list_and_get_policy" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.s3_list_and_get_policy.arn
+}
+
 resource "aws_iam_role_policy_attachment" "attach_ec2_describe_policy" {
   role       = aws_iam_role.lambda_role.name
   policy_arn = aws_iam_policy.ec2_describe_policy.arn
