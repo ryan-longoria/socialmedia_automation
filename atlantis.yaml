@@ -82,7 +82,7 @@ projects:
       when_modified:
         - "./accounts/animeutopia-nonprod/backends/*.tfvars"
         - "./accounts/animeutopia-nonprod/tfvars/*.tfvars"
-        - "*.tf"
+        - "./accounts/animeutopia/*.tf"
     repo_locks:
       mode: on_plan
 
@@ -94,7 +94,7 @@ projects:
       when_modified:
         - "./accounts/animeutopia-prod/backends/*.tfvars"
         - "./accounts/animeutopia-prod/tfvars/*.tfvars"
-        - "*.tf"
+        - "./accounts/animeutopia/*.tf"
     apply_requirements: [mergeable, undiverged]
     repo_locks:
       mode: on_plan
