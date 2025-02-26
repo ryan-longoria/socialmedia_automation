@@ -81,6 +81,7 @@ projects:
       enabled: true
       when_modified:
         - "./accounts/animeutopia-nonprod/**"
+    apply_requirements: [mergeable, undiverged]
     repo_locks:
       mode: on_plan
 
@@ -102,6 +103,7 @@ projects:
       enabled: true
       when_modified:
         - "./accounts/sharedservices-nonprod/**"
+    apply_requirements: [mergeable, undiverged]
     repo_locks:
       mode: on_plan
 
