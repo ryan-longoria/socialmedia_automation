@@ -40,7 +40,7 @@ workflows:
 projects:
   - name: nonprod
     workflow: nonprod
-    dir: .
+    dir: accounts/animeutopia-nonprod
     autoplan:
       enabled: true
       when_modified:
@@ -52,7 +52,7 @@ projects:
 
   - name: prod
     workflow: prod
-    dir: .
+    dir: accounts/animeutopia-prod
     autoplan:
       enabled: true
       when_modified:
