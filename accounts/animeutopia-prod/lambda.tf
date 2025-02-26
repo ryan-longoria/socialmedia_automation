@@ -113,6 +113,26 @@ resource "aws_iam_role_policy_attachment" "attach_ec2_describe_policy" {
   policy_arn = aws_iam_policy.ec2_describe_policy.arn
 }
 
+resource "aws_iam_policy" "ec2_describe_policy" {
+  name        = "anime_ec2_describe_policy"
+  description = "Policy to allow Lambda functions to describe EC2 instances"
+  policy      = jsonencode({
+    Version   : "2012-10-17",
+    Statement : [
+      {
+        Effect   : "Allow",
+        Action   : "ec2:DescribeInstances",
+        Resource : "*"
+      }
+    ]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "attach_ec2_describe_policy" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.ec2_describe_policy.arn
+}
+
 resource "aws_iam_policy" "sns_publish_policy" {
   name        = "anime_sns_publish_policy"
   description = "Policy to allow Lambda functions to publish to SNS topics for notifications"
