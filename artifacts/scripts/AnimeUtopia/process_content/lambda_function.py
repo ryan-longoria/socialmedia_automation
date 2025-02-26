@@ -185,17 +185,22 @@ def lambda_handler(event, context):
     Returns:
         dict: Dictionary with the processed post details.
     """
-    post = event.get("post", {})
+    post = event.get("post")
+    if not post:
+        post = event.get("rssData", {}).get("post", {})
+
     full_title = post.get("title", "")
     if not full_title:
         return {"status": "error", "error": "No title provided in post."}
 
     anime_titles, image_path = fetch_anilist_titles_and_image(full_title)
-
+    if not anime_titles:
+        logger.info("No anime titles returned from AniList; defaulting to full title.")
+        anime_titles = [full_title]
     core_title, description = extract_core_title_and_description(full_title, anime_titles)
 
-    post["title"] = core_title
+    post["title"] = core_title if core_title else full_title
     post["description"] = description if description else post.get("description", "")
     post["image_path"] = image_path
-
+    
     return {"status": "processed", "post": post}
