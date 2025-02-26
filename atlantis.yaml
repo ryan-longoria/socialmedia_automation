@@ -1,7 +1,7 @@
 version: 3
 
 workflows:
-  nonprod:
+  animeutopia-nonprod:
     plan:
       steps:
         - run: /opt/atlantis/bin/fetch-params.sh
@@ -19,7 +19,7 @@ workflows:
               - "-var-file=tfvars/nonprod-ue2-animeutopia.tfvars"
               - "-var-file=/home/atlantis/.atlantis/nonprod-ue2-animeutopia.tfvars"
 
-  prod:
+  animeutopia-prod:
     plan:
       steps:
         - run: /opt/atlantis/bin/fetch-params.sh
@@ -36,29 +36,84 @@ workflows:
             extra_args:
               - "-var-file=tfvars/prod-ue2-animeutopia.tfvars"
               - "-var-file=/home/atlantis/.atlantis/prod-ue2-animeutopia.tfvars"
+  
+  sharedservices-nonprod:
+    plan:
+      steps:
+        - run: /opt/atlantis/bin/fetch-params.sh
+        - init:
+            extra_args: ["--backend-config", "backends/nonprod-sharedservices.backend.tfvars", "--reconfigure"]
+        - plan:
+            extra_args:
+              - "-var-file=tfvars/nonprod-ue2-sharedservices.tfvars"
+              - "-var-file=/home/atlantis/.atlantis/nonprod-ue2-sharedservices.tfvars"
+    apply:
+      steps:
+        - run: /opt/atlantis/bin/fetch-params.sh
+        - apply:
+            extra_args:
+              - "-var-file=tfvars/nonprod-ue2-sharedservices.tfvars"
+              - "-var-file=/home/atlantis/.atlantis/nonprod-ue2-sharedservices.tfvars"
+
+  sharedservices-prod:
+    plan:
+      steps:
+        - run: /opt/atlantis/bin/fetch-params.sh
+        - init:
+            extra_args: ["--backend-config", "backends/prod-sharedservices.backend.tfvars", "--reconfigure"]
+        - plan:
+            extra_args:
+              - "-var-file=tfvars/prod-ue2-sharedservices.tfvars"
+              - "-var-file=/home/atlantis/.atlantis/prod-ue2-sharedservices.tfvars"
+    apply:
+      steps:
+        - run: /opt/atlantis/bin/fetch-params.sh
+        - apply:
+            extra_args:
+              - "-var-file=tfvars/prod-ue2-sharedservices.tfvars"
+              - "-var-file=/home/atlantis/.atlantis/prod-ue2-sharedservices.tfvars"
 
 projects:
-  - name: nonprod
-    workflow: nonprod
-    dir: .
+  - name: animeutopia-nonprod
+    workflow: animeutopia-nonprod
+    dir: accounts/animeutopia-nonprod
     autoplan:
       enabled: true
       when_modified:
-        - "./backends/*.tfvars"
-        - "./tfvars/*.tfvars"
-        - "*.tf"
+        - "./accounts/animeutopia-nonprod/**"
+    apply_requirements: [mergeable, undiverged]
     repo_locks:
       mode: on_plan
 
-  - name: prod
-    workflow: prod
-    dir: .
+  - name: animeutopia-prod
+    workflow: animeutopia-prod
+    dir: accounts/animeutopia-prod
     autoplan:
       enabled: true
       when_modified:
-        - "./backends/*.tfvars"
-        - "./tfvars/*.tfvars"
-        - "*.tf"
+        - "./accounts/animeutopia-prod/**"
+    apply_requirements: [mergeable, undiverged]
+    repo_locks:
+      mode: on_plan
+  
+  - name: sharedservices-nonprod
+    workflow: sharedservices-nonprod
+    dir: accounts/sharedservices-nonprod
+    autoplan:
+      enabled: true
+      when_modified:
+        - "./accounts/sharedservices-nonprod/**"
+    apply_requirements: [mergeable, undiverged]
+    repo_locks:
+      mode: on_plan
+
+  - name: sharedservices-prod
+    workflow: sharedservices-prod
+    dir: accounts/sharedservices-prod
+    autoplan:
+      enabled: true
+      when_modified:
+        - "./accounts/sharedservices-prod/**"
     apply_requirements: [mergeable, undiverged]
     repo_locks:
       mode: on_plan

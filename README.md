@@ -1,6 +1,6 @@
 # FeedMatrix
 
-FeedMatrix is a modular automation platform designed to streamline the creation and distribution of dynamic content across multiple social media profiles. The first implementation focuses on an Anime News Instagram account (AnimeUtopia), but the architecture is built to easily extend to additional accounts and platforms in the future.
+FeedMatrix is my modular automation platform designed to streamline the creation and distribution of dynamic content across multiple social media profiles. The first implementation focuses on an Anime News Instagram account (AnimeUtopia), but the architecture is built to easily extend to additional accounts and platforms in the future. I'm currently training my own machine learning model to generate content such as memes.
 
 ## Overview
 
@@ -24,37 +24,45 @@ The project leverages AWS and infrastructure-as-code (Terraform) to manage its c
 ## Project Structure
 
 ```
-FeedMatrix/
-├── artifacts/
-│   ├── adobe/
-│   │   └── animeutopia/                # After Effects template, logos, and related assets
-│   └── scripts/
-│       └── animeutopa/                 # Lambda functions (fetch_rss, process_content, render_video, etc.)
-├── tf/
-│   ├── main.tf                       # Primary Terraform configuration file
-│   ├── outputs.tf                    # Terraform outputs
-│   ├── providers.tf                  # AWS provider configuration
-│   ├── variables.tf                  # Terraform variable definitions
-│   ├── backend.tf                    # Remote state configuration for Terraform
-│   ├── lambda.tf                     # Definitions for Lambda functions and IAM roles/policies
-│   ├── sfn.tf                        # AWS Step Functions configuration
-│   ├── sns.tf                        # SNS Topic and subscription configuration
-│   └── state_machine.json.tpl        # Template for Step Functions state machine definition
-├── atlantis.yaml                     # Atlantis configuration for CI/CD with Terraform
-├── tfvars/                           # Terraform variable files for different environments
-└── backends/                         # Terraform backend configuration files
+FeedMatrix/                     # Root
+├── .gitignore                  # Git ignore file
+├── atlantis.yaml               # Atlantis CI/CD configuration for Terraform
+├── LICENSE                     # Project license
+├── README.md                   # Project overview
+├── .github/                    # GitHub-specific configuration
+│   └── workflows/              # GitHub Actions workflows (None used anymore)
+├── accounts/                   # Account-specific directories
+│   ├── animeutopia-nonprod/    # Non-production AnimeUtopia account configuration
+│   │   ├── artifacts/          # Assets
+│   │   │   └── scripts/        # Account-specific scripts
+│   │   ├── backends/           # Terraform backend configurations
+│   │   ├── tfvars/             # Terraform variable files
+│   │   └── (Terraform code)    # Terraform configuration files
+│   ├── animeutopia-prod/       # Production AnimeUtopia account configuration
+│   │   ├── artifacts/          # Assets
+│   │   │   ├── adobe/          # After Effects templates and related assets
+│   │   │   └── scripts/        # Account-specific scripts
+│   │   ├── backends/           # Terraform backend configurations
+│   │   ├── tfvars/             # Terraform variable files
+│   │   └── (Terraform code)    # Terraform configuration files
+│   ├── sharedservices-nonprod/ # Shared services for nonprod
+│   └── sharedservices-prod/    # Shared services for prod
+├── modules/                    # Reusable Terraform modules
+│   ├── template-nonprod/       # Module for nonprod environments
+│   └── template-prod/          # Module for prod environments
 ```
 
 ## Usage
 
 - **Scheduled Execution:** CloudWatch Events trigger the state machine every 5 minutes. The workflow fetches the RSS feed, processes the content, and if new anime content is detected, it executes the video rendering workflow.
-- **Manual Posting:** After receiving an SNS notification (with pre-signed URLs for the video and project file), the content is manually posted on Instagram. Future enhancements will aim to automate this posting process further.
-- **Monitoring & Logs:** Logs from Lambda functions, the EC2 instance, and After Effects automation are available via CloudWatch and local log files for troubleshooting and performance monitoring.
+- **Manual Posting:** After receiving an SNS notification (with pre-signed URLs for the video and project file), the content is manually posted on Instagram. (I really hope I can automate this soon)
+- **Monitoring & Logs:** Logs from Lambda functions, the EC2 instance, and After Effects automation are available via CloudWatch and local EC2 log files for troubleshooting and performance monitoring.
 
 ## Future Enhancements
 
 - **Platform Expansion:** Extend the automation to include more social media platforms and accounts.
 - **Improved Automation:** Integrate direct posting to platforms after becoming an approved Meta developer to use it's Instagram API directly.
+- **Machine Learning Integration** Train a custom machine learning model to generate content for posts.
 - **Monitoring:** Implement monitoring dashboards and alerts for system performance, error notifications, and workflow tracking.
 - **Scalability:** Optimize the system for higher throughput and multi-threaded processing.
 
@@ -65,5 +73,4 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 ## Contact
 
 Feel free to contact me about anything at all:
-- **Ryan Longoria**
 - **Email:** [ryan.longoria.cy@gmail.com](mailto:ryan.longoria.cy@gmail.com)
