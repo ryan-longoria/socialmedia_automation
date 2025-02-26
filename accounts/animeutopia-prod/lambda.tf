@@ -83,6 +83,11 @@ resource "aws_iam_policy" "ec2_describe_policy" {
   })
 }
 
+resource "aws_iam_role_policy_attachment" "attach_ec2_describe_policy" {
+  role       = aws_iam_role.lambda_role.name
+  policy_arn = aws_iam_policy.ec2_describe_policy.arn
+}
+
 resource "aws_iam_policy" "s3_list_and_get_policy" {
   name        = "anime_s3_list_and_get_policy"
   description = "Policy to allow Lambda to list the bucket and get objects"
@@ -106,31 +111,6 @@ resource "aws_iam_policy" "s3_list_and_get_policy" {
 resource "aws_iam_role_policy_attachment" "attach_s3_list_and_get_policy" {
   role       = aws_iam_role.lambda_role.name
   policy_arn = aws_iam_policy.s3_list_and_get_policy.arn
-}
-
-resource "aws_iam_role_policy_attachment" "attach_ec2_describe_policy" {
-  role       = aws_iam_role.lambda_role.name
-  policy_arn = aws_iam_policy.ec2_describe_policy.arn
-}
-
-resource "aws_iam_policy" "ec2_describe_policy" {
-  name        = "anime_ec2_describe_policy"
-  description = "Policy to allow Lambda functions to describe EC2 instances"
-  policy      = jsonencode({
-    Version   : "2012-10-17",
-    Statement : [
-      {
-        Effect   : "Allow",
-        Action   : "ec2:DescribeInstances",
-        Resource : "*"
-      }
-    ]
-  })
-}
-
-resource "aws_iam_role_policy_attachment" "attach_ec2_describe_policy" {
-  role       = aws_iam_role.lambda_role.name
-  policy_arn = aws_iam_policy.ec2_describe_policy.arn
 }
 
 resource "aws_iam_policy" "sns_publish_policy" {
