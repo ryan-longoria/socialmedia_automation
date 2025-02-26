@@ -62,3 +62,28 @@ projects:
     apply_requirements: [mergeable, undiverged]
     repo_locks:
       mode: on_plan
+  
+    - name: sharedservices-nonprod
+    workflow: nonprod
+    dir: accounts/sharedservices-nonprod
+    autoplan:
+      enabled: true
+      when_modified:
+        - "./accounts/sharedservices-nonprod/backends/*.tfvars"
+        - "./accounts/sharedservices-nonprod/tfvars/*.tfvars"
+        - "./accounts/sharedservices-nonprod/*.tf"
+    repo_locks:
+      mode: on_plan
+
+  - name: sharedservices-prod
+    workflow: prod
+    dir: accounts/sharedservices-prod
+    autoplan:
+      enabled: true
+      when_modified:
+        - "./accounts/sharedservices-prod/backends/*.tfvars"
+        - "./accounts/sharedservices-prod/tfvars/*.tfvars"
+        - "./accounts/sharedservices-prod/*.tf"
+    apply_requirements: [mergeable, undiverged]
+    repo_locks:
+      mode: on_plan
