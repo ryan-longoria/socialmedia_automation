@@ -8,7 +8,7 @@
 resource "aws_iam_role" "lambda_role" {
   name = "anime_lambda_role"
   assume_role_policy = jsonencode({
-    Version = "2012-10-17",
+    Version   = "2012-10-17",
     Statement = [{
       Action    = "sts:AssumeRole",
       Effect    = "Allow",
@@ -29,11 +29,11 @@ resource "aws_iam_policy" "ec2_control_policy" {
   name        = "anime_ec2_control_policy"
   description = "Policy to allow Lambda functions to start and stop EC2 instances"
   policy = jsonencode({
-    Version : "2012-10-17",
+    Version   : "2012-10-17",
     Statement : [
       {
-        Effect : "Allow",
-        Action : [
+        Effect   : "Allow",
+        Action   : [
           "ec2:StartInstances",
           "ec2:StopInstances"
         ],
@@ -52,7 +52,7 @@ resource "aws_iam_policy" "ssm_send_command_policy" {
       {
         Effect: "Allow",
         Action: "ssm:*",
-        Resource: "*"
+        Resource: "*"  // You could scope this further to your EC2 instance if needed.
       }
     ]
   })
@@ -88,7 +88,7 @@ resource "aws_iam_role_policy_attachment" "attach_ec2_describe_policy" {
   policy_arn = aws_iam_policy.ec2_describe_policy.arn
 }
 
-resource "aws_iam_policy" "s3_list_and_get_policy" {
+resource "aws_iam_policy" "s3_full_policy" {
   name        = "anime_s3_full_policy"
   description = "Policy to allow Lambda full access to S3 for the prod-animeutopia-media-bucket"
   policy      = jsonencode({
@@ -108,18 +108,18 @@ resource "aws_iam_policy" "s3_list_and_get_policy" {
 
 resource "aws_iam_role_policy_attachment" "attach_s3_list_and_get_policy" {
   role       = aws_iam_role.lambda_role.name
-  policy_arn = aws_iam_policy.s3_list_and_get_policy.arn
+  policy_arn = aws_iam_policy.s3_full_policy.arn
 }
 
 resource "aws_iam_policy" "sns_publish_policy" {
   name        = "anime_sns_publish_policy"
   description = "Policy to allow Lambda functions to publish to SNS topics for notifications"
   policy = jsonencode({
-    Version : "2012-10-17",
+    Version   : "2012-10-17",
     Statement : [
       {
-        Effect : "Allow",
-        Action : [
+        Effect   : "Allow",
+        Action   : [
           "sns:Publish"
         ],
         Resource : aws_sns_topic.anime_notifications.arn
