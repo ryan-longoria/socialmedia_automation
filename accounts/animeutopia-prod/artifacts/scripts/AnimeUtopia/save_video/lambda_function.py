@@ -77,4 +77,4 @@ def lambda_handler(event, context):
         return json.loads(serialized)
     except Exception as e:
         logger.exception("Failed to send SSM command: %s", e)
-        return {"error": f"Failed to send SSM command: {e}"}
+        return {"error": f"Failed to send SSM command: {e}"} 
