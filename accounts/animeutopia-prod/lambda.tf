@@ -52,7 +52,7 @@ resource "aws_iam_policy" "ssm_send_command_policy" {
       {
         Effect: "Allow",
         Action: "ssm:*",
-        Resource: "*"  // You can further scope this if desired.
+        Resource: "*"
       }
     ]
   })
