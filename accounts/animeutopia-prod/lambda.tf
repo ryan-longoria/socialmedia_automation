@@ -191,7 +191,7 @@ resource "aws_lambda_function" "render_video" {
   handler            = "lambda_function.lambda_handler"
   runtime            = "python3.9"
   role               = aws_iam_role.lambda_role.arn
-  timeout            = 20
+  timeout            = 120
 
   environment {
     variables = {
