@@ -89,7 +89,7 @@ resource "aws_iam_role_policy_attachment" "attach_ec2_describe_policy" {
 }
 
 resource "aws_iam_policy" "s3_full_policy" {
-  name        = "anime_s3_full_policy"
+  name        = "anime_s3_full_policy_v2"
   description = "Policy to allow Lambda full access to S3 for the prod-animeutopia-media-bucket"
   policy      = jsonencode({
     Version: "2012-10-17",
