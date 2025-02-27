@@ -47,7 +47,7 @@ def lambda_handler(event, context):
     try:
         response = ssm.send_command(
             InstanceIds=[instance_id],
-            DocumentName="AWS-RunShellScript",
+            DocumentName="AWS-RunPowerShellScript",
             Parameters={
                 "commands": [
                     "afterfx.exe -r automate_aftereffects.jsx"
