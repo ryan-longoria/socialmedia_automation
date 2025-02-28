@@ -46,7 +46,7 @@ FeedMatrix/                     # Root
 │   │   ├── tfvars/             # Terraform variable files
 │   │   └── (Terraform code)    # Terraform configuration files
 │   ├── sharedservices-nonprod/ # Shared services for nonprod
-│   └── sharedservices-prod/    # Shared services for prod
+│   └── sharedservices-prod/    # Shared services for prod. Currently holds training data for my ML models
 ├── modules/                    # Reusable Terraform modules
 │   ├── template-nonprod/       # Module for nonprod environments
 │   └── template-prod/          # Module for prod environments
@@ -68,9 +68,4 @@ FeedMatrix/                     # Root
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for further details.
-
-## Contact
-
-Feel free to contact me about anything at all:
-- **Email:** [ryan.longoria.cy@gmail.com](mailto:ryan.longoria.cy@gmail.com)
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for further details. (To make me sound cool)
