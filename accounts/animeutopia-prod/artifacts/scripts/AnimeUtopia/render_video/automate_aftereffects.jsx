@@ -8,7 +8,6 @@ function logMessage(level, message) {
     var logStr = "[" + level + "] " + message;
     $.writeln(logStr);
 
-    // Write to a log file in the user's home directory
     var logFile = new File("~/after_effects_log.txt");
     if (logFile.open("a")) {
         logFile.writeln(logStr);
