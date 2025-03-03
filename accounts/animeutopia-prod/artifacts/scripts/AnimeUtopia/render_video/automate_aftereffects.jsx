@@ -69,7 +69,7 @@ if (!jsonFile.exists) {
     var success = downloadFromUrl(s3JsonUrl, localJsonPath);
     if (!success) {
         logMessage("ERROR", "Failed to download JSON from S3.");
-        return;
+        exit();
     }
 }
 
