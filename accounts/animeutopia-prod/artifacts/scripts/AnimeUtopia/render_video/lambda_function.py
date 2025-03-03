@@ -73,7 +73,7 @@ def lambda_handler(event, context):
             DocumentName="AWS-RunPowerShellScript",
             Parameters={
                 "commands": [
-                    "C:\Program Files\Adobe\Adobe After Effects 2025\Support Files\afterfx.exe -r automate_aftereffects.jsx"
+                    "afterfx.exe -r 'C:\animeutopia\automate_aftereffects.jsx'"
                 ]
             }
         )
