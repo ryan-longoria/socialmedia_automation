@@ -1,14 +1,14 @@
+#include "json2.jsx"
+
 /**
- * Custom logging function to output messages to the ExtendScript console and a log file.
+ * Generates a log entry by writing to both the ExtendScript console and a log file.
  *
- * @param {string} level - The log level (e.g., "INFO", "ERROR").
+ * @param {string} level - The log level (e.g., "INFO", "ERROR", "WARN").
  * @param {string} message - The log message.
  */
 function logMessage(level, message) {
     var logStr = "[" + level + "] " + message;
     $.writeln(logStr);
-
-    // Write to a log file in the user's home directory
     var logFile = new File("~/after_effects_log.txt");
     if (logFile.open("a")) {
         logFile.writeln(logStr);
@@ -17,12 +17,12 @@ function logMessage(level, message) {
 }
 
 /**
- * Downloads a file from a URL using a basic HTTP GET via a Socket.
- * This function assumes the file is publicly accessible.
+ * Downloads a file from a given URL using a basic HTTP GET via a Socket.
+ * Assumes the file is publicly accessible.
  *
  * @param {string} url - The URL of the file to download.
- * @param {string} localPath - The local path where the file will be saved.
- * @returns {boolean} True if download succeeds, false otherwise.
+ * @param {string} localPath - The local file path where the file should be saved.
+ * @returns {boolean} True if the download is successful; otherwise, false.
  */
 function downloadFromUrl(url, localPath) {
     try {
@@ -56,132 +56,154 @@ function downloadFromUrl(url, localPath) {
         } else {
             throw new Error("Unable to open socket connection.");
         }
-    } catch(e) {
+    } catch (e) {
         logMessage("ERROR", "Download failed: " + e.message);
         return false;
     }
 }
 
-var s3JsonUrl = "https://prod-animeutopia-media-bucket.s3.amazonaws.com/most_recent_post.json";
-var localJsonPath = "most_recent_post.json";
+// Presigned URL for the JSON file from S3 (replace {{PRESIGNED_URL}} with your URL)
+var s3JsonUrl = "{{PRESIGNED_URL}}";
+
+// Define local file paths
+var localJsonPath = "C:/animeutopia/output/most_recent_post.json";
+var projectFilePath = "C:/animeutopia/anime_template.aep";
+
+// Download JSON from S3 if it doesn't already exist
+if (!downloadFromUrl(s3JsonUrl, localJsonPath)) {
+    logMessage("ERROR", "Failed to download JSON from S3.");
+    throw new Error("Failed to download JSON from S3. Exiting script execution.");
+}
 
 var jsonFile = new File(localJsonPath);
 if (!jsonFile.exists) {
-    var success = downloadFromUrl(s3JsonUrl, localJsonPath);
-    if (!success) {
-        logMessage("ERROR", "Failed to download JSON from S3.");
-        return;
-    }
+    logMessage("ERROR", "JSON file not found.");
+    throw new Error("JSON file not found. Exiting script execution.");
 }
 
-if (jsonFile.exists) {
-    jsonFile.open("r");
-    var jsonData = jsonFile.read();
-    jsonFile.close();
+// Read and parse the JSON file
+jsonFile.open("r");
+var jsonData = jsonFile.read();
+jsonFile.close();
+var postData = JSON.parse(jsonData);
+logMessage("INFO", "JSON data loaded: Title = " + postData.title);
 
-    var postData = JSON.parse(jsonData);
+// Open the After Effects project file
+var projectFile = new File(projectFilePath);
+if (!projectFile.exists) {
+    logMessage("ERROR", "After Effects project file (.aep) not found.");
+    throw new Error("After Effects project file not found. Exiting script execution.");
+}
+app.open(projectFile);
+logMessage("INFO", "Opened project file: " + projectFile.fsName);
 
-    var projectFile = new File("/animeutopia/anime_template.aep"); 
-    if (projectFile.exists) {
-        app.open(projectFile);
-
-        try {
-            var comp = null;
-            var compName = "standard-news-template";
-            for (var i = 1; i <= app.project.items.length; i++) {
-                var item = app.project.items[i];
-                if (item instanceof CompItem && item.name === compName) {
-                    comp = item;
-                    break;
-                }
-            }
-
-            if (!comp) {
-                throw new Error("Composition 'standard-news-template' not found in the After Effects project.");
-            }
-
-            var titleLayer = null;
-            var subtitleLayer = null;
-            var backgroundLayer = null;
-
-            for (var i = 1; i <= comp.layers.length; i++) {
-                var layer = comp.layers[i];
-                if (layer.name === "Title") {
-                    titleLayer = layer;
-                }
-                if (layer.name === "Description") {
-                    subtitleLayer = layer;
-                }
-                if (layer.name === "BackgroundImage") {
-                    backgroundLayer = layer;
-                }
-            }
-
-            if (!titleLayer) {
-                throw new Error("Title layer not found in the composition.");
-            }
-            if (!subtitleLayer) {
-                throw new Error("Description layer not found in the composition.");
-            }
-            if (!backgroundLayer) {
-                throw new Error("Background layer (BackgroundImage) not found in the composition.");
-            }
-
-            titleLayer.property("Source Text").setValue(postData.title);
-            subtitleLayer.property("Source Text").setValue(postData.description);
-
-            var imageFile = new File("backgroundimage_converted.jpg");
-            if (imageFile.exists) {
-                var importOptions = new ImportOptions(imageFile);
-                var imageFootage = app.project.importFile(importOptions);
-
-                backgroundLayer.replaceSource(imageFootage, false);
-
-                var compWidth = comp.width;
-                var compHeight = comp.height;
-                var layerWidth = backgroundLayer.source.width;
-                var layerHeight = backgroundLayer.source.height;
-
-                var scaleX = (compWidth / layerWidth) * 100;
-                var scaleY = (compHeight / layerHeight) * 100;
-
-                var scaleFactor = Math.max(scaleX, scaleY);
-                backgroundLayer.transform.scale.setValue([scaleFactor, scaleFactor]);
-
-                backgroundLayer.transform.position.setValue([compWidth / 2, compHeight / 2]);
-            } else {
-                throw new Error("Background image (backgroundimage_converted.jpg) not found.");
-            }
-
-            var renderQueue = app.project.renderQueue;
-            var rqItem = renderQueue.items.add(comp);
-
-            var outputModule = rqItem.outputModule(1);
-            outputModule.file = new File("anime_post.mp4");
-
-            outputModule.format = "QuickTime";
-            outputModule.videoCodec = "H.264";
-            outputModule.includeSourceXMP = false; 
-            outputModule.audioOutput = true; 
-            outputModule.audioCodec = "AAC"; 
-
-            renderQueue.render();
-            logMessage("INFO", "Render complete for composition: " + compName);
-
-            try {
-                var exportFile = new File("anime_template_exported.aep");
-                app.project.save(exportFile);
-                logMessage("INFO", "Project file exported to: " + exportFile.fsName);
-            } catch (exportError) {
-                logMessage("ERROR", "Error exporting project file: " + exportError.message);
-            }
-
-        } catch (e) {
-            logMessage("ERROR", "Processing error: " + e.message);
+try {
+    // Find the composition by name
+    var comp = null;
+    var compName = "standard-news-template";
+    for (var i = 1; i <= app.project.items.length; i++) {
+        var item = app.project.items[i];
+        if (item instanceof CompItem && item.name === compName) {
+            comp = item;
+            break;
         }
-    } else {
-        logMessage("ERROR", "After Effects project file (.aep) not found.");
     }
-} else {
-    logMessage("ERROR", "JSON file not found.");
+    if (!comp) {
+        throw new Error("Composition '" + compName + "' not found in the project.");
+    }
+    logMessage("INFO", "Found composition: " + compName);
+
+    // Retrieve text and background layers
+    var titleLayer = null;
+    var subtitleLayer = null;
+    var backgroundLayer = null;
+    for (var i = 1; i <= comp.layers.length; i++) {
+        var layer = comp.layers[i];
+        if (layer.name === "Title") {
+            titleLayer = layer;
+        }
+        if (layer.name === "Description") {
+            subtitleLayer = layer;
+        }
+        if (layer.name === "BackgroundImage") {
+            backgroundLayer = layer;
+        }
+    }
+    if (!titleLayer) {
+        throw new Error("Title layer not found in the composition.");
+    }
+    if (!subtitleLayer) {
+        throw new Error("Description layer not found in the composition.");
+    }
+    if (!backgroundLayer) {
+        logMessage("WARN", "Background layer (BackgroundImage) not found. Skipping background image replacement.");
+    }
+
+    // Update text layers with data from JSON
+    titleLayer.property("Source Text").setValue(postData.title);
+    subtitleLayer.property("Source Text").setValue(postData.description);
+    logMessage("INFO", "Updated text layers.");
+
+    // Replace background image if available and if a background layer exists
+    var imageFile = new File("C:/animeutopia/output/backgroundimage_converted.jpg");
+    if (imageFile.exists && backgroundLayer) {
+        var importOptions = new ImportOptions(imageFile);
+        var imageFootage = app.project.importFile(importOptions);
+        backgroundLayer.replaceSource(imageFootage, false);
+        logMessage("INFO", "Background image replaced.");
+
+        var compWidth = comp.width;
+        var compHeight = comp.height;
+        var layerWidth = backgroundLayer.source.width;
+        var layerHeight = backgroundLayer.source.height;
+        var scaleX = (compWidth / layerWidth) * 100;
+        var scaleY = (compHeight / layerHeight) * 100;
+        var scaleFactor = Math.max(scaleX, scaleY);
+        backgroundLayer.transform.scale.setValue([scaleFactor, scaleFactor]);
+        backgroundLayer.transform.position.setValue([compWidth / 2, compHeight / 2]);
+        logMessage("INFO", "Background layer scaled and positioned.");
+    } else {
+        logMessage("WARN", "Background image file not found; skipping background replacement.");
+    }
+
+    // Add composition to render queue and configure output
+    var renderQueue = app.project.renderQueue;
+    var rqItem = renderQueue.items.add(comp);
+    logMessage("INFO", "Added composition to render queue.");
+    var outputModule = rqItem.outputModule(1);
+    var outputFile = new File("C:/animeutopia/output/anime_post.mp4");
+    outputModule.file = outputFile;
+    outputModule.format = "QuickTime";
+    outputModule.videoCodec = "H.264";
+    outputModule.includeSourceXMP = false;
+    outputModule.audioOutput = true;
+    outputModule.audioCodec = "AAC";
+    logMessage("INFO", "Output module configured. Output file: " + outputFile.fsName);
+
+    // Start the render process
+    logMessage("INFO", "Starting render...");
+    try {
+        renderQueue.render();
+        logMessage("INFO", "Render completed.");
+    } catch (renderError) {
+        logMessage("ERROR", "RenderQueue.render() failed: " + renderError.message);
+    }
+
+    // Verify if output file exists
+    if (outputFile.exists) {
+        logMessage("INFO", "Output file created: " + outputFile.fsName);
+    } else {
+        logMessage("WARN", "Output file was not created.");
+    }
+
+    // Export the project file
+    try {
+        var exportFile = new File("C:/animeutopia/output/anime_template_exported.aep");
+        app.project.save(exportFile);
+        logMessage("INFO", "Project file exported to: " + exportFile.fsName);
+    } catch (exportError) {
+        logMessage("ERROR", "Error exporting project file: " + exportError.message);
+    }
+} catch (e) {
+    logMessage("ERROR", "Processing error: " + e.message);
 }

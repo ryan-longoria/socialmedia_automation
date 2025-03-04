@@ -10,17 +10,42 @@ logger.setLevel(logging.INFO)
 
 
 def default_serializer(o):
+    """
+    Serialize datetime objects as ISO formatted strings.
+
+    Args:
+        o: Object to serialize.
+
+    Raises:
+        TypeError: If object type is not serializable.
+
+    Returns:
+        str: ISO formatted datetime string.
+    """
     if isinstance(o, datetime):
         return o.isoformat()
     raise TypeError(f"Type {type(o)} not serializable")
 
 
 def wait_for_ssm_registration(ssm_client, instance_id, timeout=300, interval=10):
+    """
+    Wait until the given instance is registered with SSM.
+
+    Args:
+        ssm_client: Boto3 SSM client.
+        instance_id (str): The EC2 instance ID.
+        timeout (int): Total time to wait in seconds.
+        interval (int): Interval between checks in seconds.
+
+    Returns:
+        bool: True if the instance is registered within the timeout, False otherwise.
+    """
     waited = 0
     while waited < timeout:
         info = ssm_client.describe_instance_information()
         registered_ids = [
-            i["InstanceId"] for i in info.get("InstanceInformationList", [])
+            i["InstanceId"]
+            for i in info.get("InstanceInformationList", [])
             if i.get("PingStatus") == "Online"
         ]
         if instance_id in registered_ids:
@@ -36,14 +61,33 @@ def wait_for_ssm_registration(ssm_client, instance_id, timeout=300, interval=10)
 def lambda_handler(event, context):
     """
     Trigger the video rendering process on a Windows EC2 instance using SSM.
-    Waits for the instance to become "running" and registered with SSM before sending the command.
+    
+    This function:
+      1. Ensures the EC2 instance is running.
+      2. Waits until the instance registers with SSM.
+      3. Generates a presigned URL for the JSON file stored in S3.
+      4. Reads a JSX template file (with a {{PRESIGNED_URL}} placeholder),
+         replaces the placeholder with the generated URL, and writes the
+         updated script to a target file.
+      5. Sends an SSM command to run After Effects with the updated script.
+
+    Environment Variables:
+      - INSTANCE_ID: The EC2 instance ID.
+      - TARGET_BUCKET: The S3 bucket name where the JSON file is stored.
+
+    Args:
+        event (dict): Lambda event data.
+        context (object): Lambda context object.
+
+    Returns:
+        dict: A dictionary indicating the status of the command.
     """
     instance_id = os.environ.get("INSTANCE_ID")
     if not instance_id:
         error_msg = "INSTANCE_ID environment variable not set."
         logger.error(error_msg)
         return {"error": error_msg}
-    
+
     ec2 = boto3.client("ec2")
     waited = 0
     while waited < 300:
@@ -53,37 +97,41 @@ def lambda_handler(event, context):
             logger.info("Instance %s is running.", instance_id)
             break
         else:
-            logger.info("Instance %s is in state '%s'. Waiting...", instance_id, instance_state)
+            logger.info("Instance %s is in state '%s'. Waiting...", instance_id,
+                        instance_state)
             time.sleep(10)
             waited += 10
     else:
         error_msg = f"Instance {instance_id} did not become running within timeout."
         logger.error(error_msg)
         return {"error": error_msg}
-    
+
     ssm = boto3.client("ssm")
     if not wait_for_ssm_registration(ssm, instance_id):
         error_msg = f"Instance {instance_id} did not register with SSM within timeout."
         logger.error(error_msg)
         return {"error": error_msg}
-    
+
     try:
-        ssm_response = ssm.send_command(
-            InstanceIds=[instance_id],
-            DocumentName="AWS-RunPowerShellScript",
-            Parameters={
-                "commands": [
-                    "afterfx.exe -r automate_aftereffects.jsx"
-                ]
-            }
+        s3 = boto3.client("s3")
+        bucket_name = os.environ.get("TARGET_BUCKET")
+        key = "most_recent_post.json"
+        presigned_url = s3.generate_presigned_url(
+            ClientMethod="get_object",
+            Params={"Bucket": bucket_name, "Key": key},
+            ExpiresIn=3600  
         )
-        logger.info("SSM command sent successfully: %s", ssm_response)
-        response_dict = {
-            "status": "video_render_triggered",
-            "ssm_command": ssm_response
-        }
-        serialized = json.dumps(response_dict, default=default_serializer)
-        return json.loads(serialized)
+        logger.info("Generated presigned URL: %s", presigned_url)
+
+        jsx_template_path = r"C:\animeutopia\automate_aftereffects_template.jsx"
+        jsx_script_path = r"C:\animeutopia\automate_aftereffects.jsx"
+
+        with open(jsx_template_path, "r") as f:
+            jsx_template = f.read()
+        updated_jsx = jsx_template.replace("{{PRESIGNED_URL}}", presigned_url)
+        with open(jsx_script_path, "w") as f:
+            f.write(updated_jsx)
+        logger.info("After Effects script updated with presigned URL.")
     except Exception as e:
-        logger.exception("Failed to send SSM command: %s", e)
-        return {"error": f"Failed to send SSM command: {e}"}
+        logger.exception("Failed to update JSX script: %s", e)
+        return {"error": f"Failed to update JSX script: {e}"}
