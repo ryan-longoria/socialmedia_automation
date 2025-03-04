@@ -1,9 +1,8 @@
 #include "json2.jsx"
 
-var s3JsonUrl = "{{PRESIGNED_URL}}";  
-
 /**
- * Custom logging function to output messages to the ExtendScript console and a log file.
+ * Generates a log entry by writing to both the ExtendScript console and a log file.
+ *
  * @param {string} level - The log level (e.g., "INFO", "ERROR", "WARN").
  * @param {string} message - The log message.
  */
@@ -18,11 +17,12 @@ function logMessage(level, message) {
 }
 
 /**
- * Downloads a file from a URL using a basic HTTP GET via a Socket.
- * This function assumes the file is publicly accessible.
+ * Downloads a file from a given URL using a basic HTTP GET via a Socket.
+ * Assumes the file is publicly accessible.
+ *
  * @param {string} url - The URL of the file to download.
- * @param {string} localPath - The local path where the file will be saved.
- * @returns {boolean} True if download succeeds, false otherwise.
+ * @param {string} localPath - The local file path where the file should be saved.
+ * @returns {boolean} True if the download is successful; otherwise, false.
  */
 function downloadFromUrl(url, localPath) {
     try {
@@ -62,9 +62,14 @@ function downloadFromUrl(url, localPath) {
     }
 }
 
+// Presigned URL for the JSON file from S3 (replace {{PRESIGNED_URL}} with your URL)
+var s3JsonUrl = "{{PRESIGNED_URL}}";
+
+// Define local file paths
 var localJsonPath = "C:/animeutopia/output/most_recent_post.json";
 var projectFilePath = "C:/animeutopia/anime_template.aep";
 
+// Download JSON from S3 if it doesn't already exist
 if (!downloadFromUrl(s3JsonUrl, localJsonPath)) {
     logMessage("ERROR", "Failed to download JSON from S3.");
     throw new Error("Failed to download JSON from S3. Exiting script execution.");
@@ -75,12 +80,15 @@ if (!jsonFile.exists) {
     logMessage("ERROR", "JSON file not found.");
     throw new Error("JSON file not found. Exiting script execution.");
 }
+
+// Read and parse the JSON file
 jsonFile.open("r");
 var jsonData = jsonFile.read();
 jsonFile.close();
 var postData = JSON.parse(jsonData);
 logMessage("INFO", "JSON data loaded: Title = " + postData.title);
 
+// Open the After Effects project file
 var projectFile = new File(projectFilePath);
 if (!projectFile.exists) {
     logMessage("ERROR", "After Effects project file (.aep) not found.");
@@ -90,6 +98,7 @@ app.open(projectFile);
 logMessage("INFO", "Opened project file: " + projectFile.fsName);
 
 try {
+    // Find the composition by name
     var comp = null;
     var compName = "standard-news-template";
     for (var i = 1; i <= app.project.items.length; i++) {
@@ -104,6 +113,7 @@ try {
     }
     logMessage("INFO", "Found composition: " + compName);
 
+    // Retrieve text and background layers
     var titleLayer = null;
     var subtitleLayer = null;
     var backgroundLayer = null;
@@ -129,16 +139,19 @@ try {
         logMessage("WARN", "Background layer (BackgroundImage) not found. Skipping background image replacement.");
     }
 
+    // Update text layers with data from JSON
     titleLayer.property("Source Text").setValue(postData.title);
     subtitleLayer.property("Source Text").setValue(postData.description);
     logMessage("INFO", "Updated text layers.");
 
+    // Replace background image if available and if a background layer exists
     var imageFile = new File("C:/animeutopia/output/backgroundimage_converted.jpg");
     if (imageFile.exists && backgroundLayer) {
         var importOptions = new ImportOptions(imageFile);
         var imageFootage = app.project.importFile(importOptions);
         backgroundLayer.replaceSource(imageFootage, false);
         logMessage("INFO", "Background image replaced.");
+
         var compWidth = comp.width;
         var compHeight = comp.height;
         var layerWidth = backgroundLayer.source.width;
@@ -153,6 +166,7 @@ try {
         logMessage("WARN", "Background image file not found; skipping background replacement.");
     }
 
+    // Add composition to render queue and configure output
     var renderQueue = app.project.renderQueue;
     var rqItem = renderQueue.items.add(comp);
     logMessage("INFO", "Added composition to render queue.");
@@ -166,6 +180,7 @@ try {
     outputModule.audioCodec = "AAC";
     logMessage("INFO", "Output module configured. Output file: " + outputFile.fsName);
 
+    // Start the render process
     logMessage("INFO", "Starting render...");
     try {
         renderQueue.render();
@@ -174,11 +189,14 @@ try {
         logMessage("ERROR", "RenderQueue.render() failed: " + renderError.message);
     }
 
+    // Verify if output file exists
     if (outputFile.exists) {
         logMessage("INFO", "Output file created: " + outputFile.fsName);
     } else {
         logMessage("WARN", "Output file was not created.");
     }
+
+    // Export the project file
     try {
         var exportFile = new File("C:/animeutopia/output/anime_template_exported.aep");
         app.project.save(exportFile);
