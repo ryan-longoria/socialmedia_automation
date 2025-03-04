@@ -37,6 +37,8 @@ def lambda_handler(event, context):
     """
     Trigger the video rendering process on a Windows EC2 instance using SSM.
     Waits for the instance to become "running" and registered with SSM before sending the command.
+    Before sending the command, it generates a presigned URL for the JSON file and updates
+    the After Effects JSX script template with that URL.
     """
     instance_id = os.environ.get("INSTANCE_ID")
     if not instance_id:
@@ -66,14 +68,38 @@ def lambda_handler(event, context):
         error_msg = f"Instance {instance_id} did not register with SSM within timeout."
         logger.error(error_msg)
         return {"error": error_msg}
-    
+
+    try:
+        s3 = boto3.client("s3")
+        bucket_name = os.environ.get("TARGET_BUCKET")
+        key = "most_recent_post.json"
+        presigned_url = s3.generate_presigned_url(
+            ClientMethod="get_object",
+            Params={"Bucket": bucket_name, "Key": key},
+            ExpiresIn=3600
+        )
+        logger.info("Generated presigned URL: %s", presigned_url)
+        
+        jsx_template_path = r"C:\animeutopia\automate_aftereffects_template.jsx"
+        jsx_script_path = r"C:\animeutopia\automate_aftereffects.jsx"
+        
+        with open(jsx_template_path, "r") as f:
+            jsx_template = f.read()
+        updated_jsx = jsx_template.replace("{{PRESIGNED_URL}}", presigned_url)
+        with open(jsx_script_path, "w") as f:
+            f.write(updated_jsx)
+        logger.info("After Effects script updated with presigned URL.")
+    except Exception as e:
+        logger.exception("Failed to update JSX script: %s", e)
+        return {"error": f"Failed to update JSX script: {e}"}
+
     try:
         ssm_response = ssm.send_command(
             InstanceIds=[instance_id],
             DocumentName="AWS-RunPowerShellScript",
             Parameters={
                 "commands": [
-                    "afterfx.exe -r 'C:\animeutopia\automate_aftereffects.jsx'"
+                    "afterfx.exe -r \"C:\\animeutopia\\automate_aftereffects.jsx\""
                 ]
             }
         )
