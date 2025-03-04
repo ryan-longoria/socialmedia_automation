@@ -1,7 +1,7 @@
 import os
 import logging
 import boto3
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 logger = logging.getLogger()
@@ -18,7 +18,7 @@ def lambda_handler(event, context):
       - SNS_TOPIC_ARN: ARN of the SNS topic for notifications.
     
     To prevent overwriting existing files, unique file names are generated using the current UTC timestamp
-    and a UUID.
+    (as a timezone-aware object) and a UUID.
     
     Returns:
       dict: A dictionary containing the status, video_url, project_url, and the unique keys used,
@@ -38,8 +38,7 @@ def lambda_handler(event, context):
 
     s3 = boto3.client("s3")
 
-    # Generate unique file names using UTC timestamp and a UUID
-    timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
     unique_id = uuid.uuid4().hex
     video_key = f"anime_post_{timestamp}_{unique_id}.mp4"
     project_key = f"exports/anime_template_exported_{timestamp}_{unique_id}.aep"
@@ -48,7 +47,7 @@ def lambda_handler(event, context):
         video_url = s3.generate_presigned_url(
             "get_object",
             Params={"Bucket": bucket, "Key": video_key},
-            ExpiresIn=604800  # 7 days
+            ExpiresIn=604800
         )
     except Exception as e:
         logger.exception("Error generating presigned URL for video file: %s", e)
@@ -58,7 +57,7 @@ def lambda_handler(event, context):
         project_url = s3.generate_presigned_url(
             "get_object",
             Params={"Bucket": bucket, "Key": project_key},
-            ExpiresIn=604800  # 7 days
+            ExpiresIn=604800
         )
     except Exception as e:
         logger.exception("Error generating presigned URL for project file: %s", e)
