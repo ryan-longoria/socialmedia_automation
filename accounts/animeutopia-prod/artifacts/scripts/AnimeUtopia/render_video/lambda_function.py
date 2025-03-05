@@ -8,7 +8,6 @@ from datetime import datetime
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-
 def default_serializer(o):
     """
     Serialize datetime objects as ISO formatted strings.
@@ -16,7 +15,6 @@ def default_serializer(o):
     if isinstance(o, datetime):
         return o.isoformat()
     raise TypeError(f"Type {type(o)} not serializable")
-
 
 def wait_for_ssm_registration(ssm_client, instance_id, timeout=300, interval=10):
     """
@@ -39,7 +37,6 @@ def wait_for_ssm_registration(ssm_client, instance_id, timeout=300, interval=10)
             waited += interval
     return False
 
-
 def lambda_handler(event, context):
     """
     Trigger the video rendering process on a Windows EC2 instance using SSM.
@@ -48,18 +45,15 @@ def lambda_handler(event, context):
       1. Ensures the EC2 instance is running.
       2. Waits until the instance registers with SSM.
       3. Generates a presigned URL for the JSON file stored in S3.
-      4. Uses an SSM PowerShell command to update the existing 
-         C:\animeutopia\automate_aftereffects.jsx file by replacing the 
+      4. Updates the C:\\animeutopia\\automate_aftereffects.jsx file by replacing the
          placeholder line for the presigned URL with the actual generated URL.
-      5. Runs After Effects on the EC2 instance with the updated script.
-    
+      5. Runs After Effects (using the full path) on the EC2 instance with the updated script.
+
     Environment Variables:
       - INSTANCE_ID: The EC2 instance ID.
       - TARGET_BUCKET: The S3 bucket name where the JSON file is stored.
-    
-    Returns:
-        dict: A dictionary indicating the status of the command.
     """
+
     instance_id = os.environ.get("INSTANCE_ID")
     if not instance_id:
         error_msg = "INSTANCE_ID environment variable not set."
@@ -101,21 +95,27 @@ def lambda_handler(event, context):
         presigned_url = s3.generate_presigned_url(
             ClientMethod="get_object",
             Params={"Bucket": bucket_name, "Key": key},
-            ExpiresIn=3600  
+            ExpiresIn=3600
         )
         logger.info("Generated presigned URL: %s", presigned_url)
         logger.info("Type of presigned_url: %s", type(presigned_url))
+
     except Exception as e:
         logger.exception("Failed to generate presigned URL: %s", e)
         return {"error": f"Failed to generate presigned URL: {e}"}
+
+    afterfx_full_path = r"C:\Program Files\Adobe\Adobe After Effects 2025\Support Files\afterfx.exe"
 
     try:
         ps_command = (
             '(Get-Content "C:\\animeutopia\\automate_aftereffects.jsx" -Raw) '
             '-replace \'var s3JsonUrl = "{{PRESIGNED_URL}}";\', \'var s3JsonUrl = "{}";\' '
             '| Set-Content "C:\\animeutopia\\automate_aftereffects.jsx"; '
-            'afterfx.exe -r "C:\\animeutopia\\automate_aftereffects.jsx"'
-        ).format(presigned_url)
+            '"{}" -r "C:\\animeutopia\\automate_aftereffects.jsx"'
+        ).format(
+            presigned_url,
+            afterfx_full_path
+        )
         logger.info("PowerShell command: %s", ps_command)
     except Exception as e:
         logger.exception("Failed to build PowerShell command: %s", e)
@@ -125,14 +125,12 @@ def lambda_handler(event, context):
         ssm_response = ssm.send_command(
             InstanceIds=[instance_id],
             DocumentName="AWS-RunPowerShellScript",
-            Parameters={
-                "commands": [ps_command]
-            }
+            Parameters={"commands": [ps_command]},
         )
         logger.info("SSM command sent successfully: %s", ssm_response)
         response_dict = {
             "status": "video_render_triggered",
-            "ssm_command": ssm_response
+            "ssm_command": ssm_response,
         }
         serialized = json.dumps(response_dict, default=default_serializer)
         return json.loads(serialized)
