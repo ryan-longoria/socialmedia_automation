@@ -128,7 +128,7 @@ def lambda_handler(event, context):
 
         with open(jsx_template_path, "r") as f:
             jsx_template = f.read()
-        updated_jsx = jsx_template.replace("{{PRESIGNED_URL}}", presigned_url)
+        updated_jsx = jsx_template.replace("{{PRESIGNED_URL}}", str(presigned_url))
         with open(jsx_script_path, "w") as f:
             f.write(updated_jsx)
         logger.info("After Effects script updated with presigned URL.")
