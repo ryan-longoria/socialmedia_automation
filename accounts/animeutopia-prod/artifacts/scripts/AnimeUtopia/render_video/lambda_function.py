@@ -12,15 +12,6 @@ logger.setLevel(logging.INFO)
 def default_serializer(o):
     """
     Serialize datetime objects as ISO formatted strings.
-
-    Args:
-        o: Object to serialize.
-
-    Raises:
-        TypeError: If object type is not serializable.
-
-    Returns:
-        str: ISO formatted datetime string.
     """
     if isinstance(o, datetime):
         return o.isoformat()
@@ -30,15 +21,6 @@ def default_serializer(o):
 def wait_for_ssm_registration(ssm_client, instance_id, timeout=300, interval=10):
     """
     Wait until the given instance is registered with SSM.
-
-    Args:
-        ssm_client: Boto3 SSM client.
-        instance_id (str): The EC2 instance ID.
-        timeout (int): Total time to wait in seconds.
-        interval (int): Interval between checks in seconds.
-
-    Returns:
-        bool: True if the instance is registered within the timeout, False otherwise.
     """
     waited = 0
     while waited < timeout:
@@ -74,10 +56,6 @@ def lambda_handler(event, context):
       - INSTANCE_ID: The EC2 instance ID.
       - TARGET_BUCKET: The S3 bucket name where the JSON file is stored.
 
-    Args:
-        event (dict): Lambda event data.
-        context (object): Lambda context object.
-
     Returns:
         dict: A dictionary indicating the status of the command.
     """
@@ -96,8 +74,7 @@ def lambda_handler(event, context):
             logger.info("Instance %s is running.", instance_id)
             break
         else:
-            logger.info("Instance %s is in state '%s'. Waiting...", instance_id,
-                        instance_state)
+            logger.info("Instance %s is in state '%s'. Waiting...", instance_id, instance_state)
             time.sleep(10)
             waited += 10
     else:
@@ -121,14 +98,25 @@ def lambda_handler(event, context):
             ExpiresIn=3600  
         )
         logger.info("Generated presigned URL: %s", presigned_url)
+        logger.info("Type of presigned_url: %s", type(presigned_url))
 
         jsx_script_path = r"C:\animeutopia\automate_aftereffects.jsx"
 
         with open(jsx_script_path, "r") as f:
             jsx_content = f.read()
 
+        logger.info("Type of jsx_content: %s", type(jsx_content))
+        logger.info("JSX content snippet: %s", jsx_content[:100])
+
+        placeholder = 'var s3JsonUrl = "{{PRESIGNED_URL}}";'
+        if placeholder not in jsx_content:
+            logger.error("Placeholder not found in the JSX file. Check that the file contains exactly: %s", placeholder)
+            return {"error": "Placeholder not found in JSX file."}
+
         new_line = f'var s3JsonUrl = "{presigned_url}";'
-        updated_jsx = jsx_content.replace('var s3JsonUrl = "{{PRESIGNED_URL}}";', new_line)
+        logger.info("New line to replace placeholder: %s", new_line)
+
+        updated_jsx = jsx_content.replace(placeholder, new_line)
 
         with open(jsx_script_path, "w") as f:
             f.write(updated_jsx)
