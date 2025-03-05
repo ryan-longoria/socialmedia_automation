@@ -66,9 +66,8 @@ def lambda_handler(event, context):
       1. Ensures the EC2 instance is running.
       2. Waits until the instance registers with SSM.
       3. Generates a presigned URL for the JSON file stored in S3.
-      4. Reads a JSX template file (with a {{PRESIGNED_URL}} placeholder),
-         replaces the placeholder with the generated URL, and writes the
-         updated script to a target file.
+      4. Updates the automate_aftereffects.jsx file by replacing the placeholder line 
+         for the presigned URL with the actual generated URL.
       5. Sends an SSM command to run After Effects with the updated script.
 
     Environment Variables:
@@ -123,15 +122,38 @@ def lambda_handler(event, context):
         )
         logger.info("Generated presigned URL: %s", presigned_url)
 
-        jsx_template_path = r"C:\animeutopia\automate_aftereffects_template.jsx"
         jsx_script_path = r"C:\animeutopia\automate_aftereffects.jsx"
 
-        with open(jsx_template_path, "r") as f:
-            jsx_template = f.read()
-        updated_jsx = jsx_template.replace("{{PRESIGNED_URL}}", str(presigned_url))
+        with open(jsx_script_path, "r") as f:
+            jsx_content = f.read()
+
+        new_line = f'var s3JsonUrl = "{presigned_url}";'
+        updated_jsx = jsx_content.replace('var s3JsonUrl = "{{PRESIGNED_URL}}";', new_line)
+
         with open(jsx_script_path, "w") as f:
             f.write(updated_jsx)
         logger.info("After Effects script updated with presigned URL.")
     except Exception as e:
         logger.exception("Failed to update JSX script: %s", e)
         return {"error": f"Failed to update JSX script: {e}"}
+
+    try:
+        ssm_response = ssm.send_command(
+            InstanceIds=[instance_id],
+            DocumentName="AWS-RunPowerShellScript",
+            Parameters={
+                "commands": [
+                    "afterfx.exe -r \"C:\\animeutopia\\automate_aftereffects.jsx\""
+                ]
+            }
+        )
+        logger.info("SSM command sent successfully: %s", ssm_response)
+        response_dict = {
+            "status": "video_render_triggered",
+            "ssm_command": ssm_response
+        }
+        serialized = json.dumps(response_dict, default=default_serializer)
+        return json.loads(serialized)
+    except Exception as e:
+        logger.exception("Failed to send SSM command: %s", e)
+        return {"error": f"Failed to send SSM command: {e}"}
