@@ -195,7 +195,8 @@ resource "aws_lambda_function" "render_video" {
 
   environment {
     variables = {
-      INSTANCE_ID = var.ec2_instance_id
+      INSTANCE_ID   = var.ec2_instance_id
+      TARGET_BUCKET = var.s3_bucket_name
     }
   }
 }
