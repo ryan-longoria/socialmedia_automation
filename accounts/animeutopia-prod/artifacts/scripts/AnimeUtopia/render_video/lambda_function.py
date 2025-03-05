@@ -3,7 +3,6 @@ import json
 import logging
 import boto3
 import time
-import base64
 from datetime import datetime
 
 logger = logging.getLogger()
@@ -49,14 +48,15 @@ def lambda_handler(event, context):
       1. Ensures the EC2 instance is running.
       2. Waits until the instance registers with SSM.
       3. Generates a presigned URL for the JSON file stored in S3.
-      4. Updates the automate_aftereffects.jsx file (on the EC2 instance) by replacing
-         the placeholder line for the presigned URL with the actual generated URL.
-      5. Runs After Effects on the EC2 instance via an SSM PowerShell command.
-
+      4. Uses an SSM PowerShell command to update the existing 
+         C:\animeutopia\automate_aftereffects.jsx file by replacing the 
+         placeholder line for the presigned URL with the actual generated URL.
+      5. Runs After Effects on the EC2 instance with the updated script.
+    
     Environment Variables:
       - INSTANCE_ID: The EC2 instance ID.
       - TARGET_BUCKET: The S3 bucket name where the JSON file is stored.
-
+    
     Returns:
         dict: A dictionary indicating the status of the command.
     """
@@ -105,42 +105,28 @@ def lambda_handler(event, context):
         )
         logger.info("Generated presigned URL: %s", presigned_url)
         logger.info("Type of presigned_url: %s", type(presigned_url))
-
-        local_placeholder = 'var s3JsonUrl = "{{PRESIGNED_URL}}";'
-
-        template_path = os.path.join(os.getcwd(), "automate_aftereffects_template.jsx")
-        with open(template_path, "rb") as f:
-            jsx_template_bytes = f.read()
-        jsx_template = jsx_template_bytes.decode("utf-8")
-        logger.info("Read JSX template from Lambda package.")
-
-        if local_placeholder not in jsx_template:
-            logger.error("Placeholder not found in the JSX template. Expected: %s", local_placeholder)
-            return {"error": "Placeholder not found in JSX template."}
-
-        new_line = f'var s3JsonUrl = "{presigned_url}";'
-        updated_jsx = jsx_template.replace(local_placeholder, new_line)
-        logger.info("Updated JSX content prepared.")
-
-        encoded_jsx = base64.b64encode(updated_jsx.encode("utf-8")).decode("utf-8")
-
     except Exception as e:
-        logger.exception("Failed to update JSX content: %s", e)
-        return {"error": f"Failed to update JSX content: {e}"}
+        logger.exception("Failed to generate presigned URL: %s", e)
+        return {"error": f"Failed to generate presigned URL: {e}"}
 
     try:
-        ps_commands = [
-            f'$encoded = "{encoded_jsx}"',
-            '$decoded = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($encoded))',
-            'Set-Content -Path "C:\\animeutopia\\automate_aftereffects.jsx" -Value $decoded -Force',
+        ps_command = (
+            '(Get-Content "C:\\animeutopia\\automate_aftereffects.jsx" -Raw) '
+            '-replace \'var s3JsonUrl = "{{PRESIGNED_URL}}";\', \'var s3JsonUrl = "{}";\' '
+            '| Set-Content "C:\\animeutopia\\automate_aftereffects.jsx"; '
             'afterfx.exe -r "C:\\animeutopia\\automate_aftereffects.jsx"'
-        ]
+        ).format(presigned_url)
+        logger.info("PowerShell command: %s", ps_command)
+    except Exception as e:
+        logger.exception("Failed to build PowerShell command: %s", e)
+        return {"error": f"Failed to build PowerShell command: {e}"}
 
+    try:
         ssm_response = ssm.send_command(
             InstanceIds=[instance_id],
             DocumentName="AWS-RunPowerShellScript",
             Parameters={
-                "commands": ps_commands
+                "commands": [ps_command]
             }
         )
         logger.info("SSM command sent successfully: %s", ssm_response)
