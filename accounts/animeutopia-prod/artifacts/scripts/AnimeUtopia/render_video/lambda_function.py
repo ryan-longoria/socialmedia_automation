@@ -91,6 +91,11 @@ def lambda_handler(event, context):
     try:
         s3 = boto3.client("s3")
         bucket_name = os.environ.get("TARGET_BUCKET")
+        if not bucket_name or not isinstance(bucket_name, str):
+            error_msg = "TARGET_BUCKET environment variable not set or invalid."
+            logger.error(error_msg)
+            return {"error": error_msg}
+
         key = "most_recent_post.json"
         presigned_url = s3.generate_presigned_url(
             ClientMethod="get_object",
