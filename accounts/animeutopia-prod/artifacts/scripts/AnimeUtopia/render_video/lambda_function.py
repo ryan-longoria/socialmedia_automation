@@ -81,7 +81,9 @@ def lambda_handler(event, context):
         return {"error": f"Failed to generate presigned URL: {e}"}
     
     ps_command = (
-        "schtasks /Create /TN \"RenderAfterEffects\" /TR \"\\\"C:\\Program Files\\Adobe\\Adobe After Effects 2025\\Support Files\\afterfx.exe\\\" -r \\\"C:\\animeutopia\\automate_aftereffects.jsx\\\"\" /SC ONCE /ST 00:00 /RL HIGHEST /F; " +
+        "schtasks /Create /TN \"RenderAfterEffects\" "
+        "/TR \"\\\"C:\\Program Files\\Adobe\\Adobe After Effects 2025\\Support Files\\afterfx.exe\\\" -r \\\"C:\\animeutopia\\automate_aftereffects.jsx\\\"\" "
+        "/SC ONCE /ST 00:00 /RL HIGHEST /RU \"Administrator\" /RP \")h9LS(M7nt&aaLi=lEN.2MWZp)Eijp$h\" /F; "
         "schtasks /Run /TN \"RenderAfterEffects\""
     )
     logger.info("PowerShell command: %s", ps_command)
