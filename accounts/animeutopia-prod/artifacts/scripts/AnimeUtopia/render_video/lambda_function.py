@@ -102,9 +102,9 @@ def lambda_handler(event, context):
 
         jsx_script_path = r"C:\animeutopia\automate_aftereffects.jsx"
 
-        with open(jsx_script_path, "r") as f:
-            jsx_content = f.read()
-
+        with open(jsx_script_path, "rb") as f:
+            jsx_content_bytes = f.read()
+        jsx_content = jsx_content_bytes.decode("utf-8")
         logger.info("Type of jsx_content: %s", type(jsx_content))
         logger.info("JSX content snippet: %s", jsx_content[:100])
 
@@ -118,7 +118,7 @@ def lambda_handler(event, context):
 
         updated_jsx = jsx_content.replace(placeholder, new_line)
 
-        with open(jsx_script_path, "w") as f:
+        with open(jsx_script_path, "w", encoding="utf-8") as f:
             f.write(updated_jsx)
         logger.info("After Effects script updated with presigned URL.")
     except Exception as e:
