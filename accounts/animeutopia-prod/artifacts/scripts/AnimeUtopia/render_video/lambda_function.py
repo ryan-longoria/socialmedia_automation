@@ -12,15 +12,6 @@ logger.setLevel(logging.INFO)
 def default_serializer(o):
     """
     Serialize datetime objects as ISO formatted strings.
-
-    Args:
-        o: Object to serialize.
-
-    Raises:
-        TypeError: If object type is not serializable.
-
-    Returns:
-        str: ISO formatted datetime string.
     """
     if isinstance(o, datetime):
         return o.isoformat()
@@ -30,15 +21,6 @@ def default_serializer(o):
 def wait_for_ssm_registration(ssm_client, instance_id, timeout=300, interval=10):
     """
     Wait until the given instance is registered with SSM.
-
-    Args:
-        ssm_client: Boto3 SSM client.
-        instance_id (str): The EC2 instance ID.
-        timeout (int): Total time to wait in seconds.
-        interval (int): Interval between checks in seconds.
-
-    Returns:
-        bool: True if the instance is registered within the timeout, False otherwise.
     """
     waited = 0
     while waited < timeout:
@@ -66,18 +48,15 @@ def lambda_handler(event, context):
       1. Ensures the EC2 instance is running.
       2. Waits until the instance registers with SSM.
       3. Generates a presigned URL for the JSON file stored in S3.
-      4. Updates the automate_aftereffects.jsx file by replacing the placeholder line 
-         for the presigned URL with the actual generated URL.
-      5. Sends an SSM command to run After Effects with the updated script.
-
+      4. Uses an SSM PowerShell command to update the existing 
+         C:\animeutopia\automate_aftereffects.jsx file by replacing the 
+         placeholder line for the presigned URL with the actual generated URL.
+      5. Runs After Effects on the EC2 instance with the updated script.
+    
     Environment Variables:
       - INSTANCE_ID: The EC2 instance ID.
       - TARGET_BUCKET: The S3 bucket name where the JSON file is stored.
-
-    Args:
-        event (dict): Lambda event data.
-        context (object): Lambda context object.
-
+    
     Returns:
         dict: A dictionary indicating the status of the command.
     """
@@ -96,8 +75,7 @@ def lambda_handler(event, context):
             logger.info("Instance %s is running.", instance_id)
             break
         else:
-            logger.info("Instance %s is in state '%s'. Waiting...", instance_id,
-                        instance_state)
+            logger.info("Instance %s is in state '%s'. Waiting...", instance_id, instance_state)
             time.sleep(10)
             waited += 10
     else:
@@ -114,6 +92,11 @@ def lambda_handler(event, context):
     try:
         s3 = boto3.client("s3")
         bucket_name = os.environ.get("TARGET_BUCKET")
+        if not bucket_name or not isinstance(bucket_name, str):
+            error_msg = "TARGET_BUCKET environment variable not set or invalid."
+            logger.error(error_msg)
+            return {"error": error_msg}
+
         key = "most_recent_post.json"
         presigned_url = s3.generate_presigned_url(
             ClientMethod="get_object",
@@ -121,30 +104,29 @@ def lambda_handler(event, context):
             ExpiresIn=3600  
         )
         logger.info("Generated presigned URL: %s", presigned_url)
-
-        jsx_script_path = r"C:\animeutopia\automate_aftereffects.jsx"
-
-        with open(jsx_script_path, "r") as f:
-            jsx_content = f.read()
-
-        new_line = f'var s3JsonUrl = "{presigned_url}";'
-        updated_jsx = jsx_content.replace('var s3JsonUrl = "{{PRESIGNED_URL}}";', new_line)
-
-        with open(jsx_script_path, "w") as f:
-            f.write(updated_jsx)
-        logger.info("After Effects script updated with presigned URL.")
+        logger.info("Type of presigned_url: %s", type(presigned_url))
     except Exception as e:
-        logger.exception("Failed to update JSX script: %s", e)
-        return {"error": f"Failed to update JSX script: {e}"}
+        logger.exception("Failed to generate presigned URL: %s", e)
+        return {"error": f"Failed to generate presigned URL: {e}"}
+
+    try:
+        ps_command = (
+            '(Get-Content "C:\\animeutopia\\automate_aftereffects.jsx" -Raw) '
+            '-replace \'var s3JsonUrl = "{{PRESIGNED_URL}}";\', \'var s3JsonUrl = "{}";\' '
+            '| Set-Content "C:\\animeutopia\\automate_aftereffects.jsx"; '
+            'afterfx.exe -r "C:\\animeutopia\\automate_aftereffects.jsx"'
+        ).format(presigned_url)
+        logger.info("PowerShell command: %s", ps_command)
+    except Exception as e:
+        logger.exception("Failed to build PowerShell command: %s", e)
+        return {"error": f"Failed to build PowerShell command: {e}"}
 
     try:
         ssm_response = ssm.send_command(
             InstanceIds=[instance_id],
             DocumentName="AWS-RunPowerShellScript",
             Parameters={
-                "commands": [
-                    "afterfx.exe -r \"C:\\animeutopia\\automate_aftereffects.jsx\""
-                ]
+                "commands": [ps_command]
             }
         )
         logger.info("SSM command sent successfully: %s", ssm_response)
