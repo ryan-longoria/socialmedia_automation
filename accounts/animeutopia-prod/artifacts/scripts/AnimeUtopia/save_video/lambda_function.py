@@ -100,10 +100,9 @@ def lambda_handler(event, context):
         return {"error": error_msg}
 
     commands = [
-        f'cd "C:\\animeutopia\\output" && aws s3 cp "anime_post.mp4" "s3://{target_bucket}/anime_post.mp4"',
-        f'cd "C:\\animeutopia\\output" && aws s3 cp "anime_template_exported.aep" "s3://{target_bucket}/exports/anime_template_exported.aep"'
+        f'cd "C:\\animeutopia\\output"; aws s3 cp "anime_post.mp4" "s3://{target_bucket}/anime_post.mp4"',
+        f'cd "C:\\animeutopia\\output"; aws s3 cp "anime_template_exported.aep" "s3://{target_bucket}/exports/anime_template_exported.aep"'
     ]
-
 
     try:
         ssm_response = ssm.send_command(
