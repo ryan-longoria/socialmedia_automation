@@ -261,7 +261,7 @@ resource "aws_lambda_function" "notify_post" {
 
   environment {
     variables = {
-      SNS_TOPIC_ARN = aws_sns_topic.anime_notifications.arn,
+      TEAMS_WEBHOOK_URL = var.teams_webhook_url,
       TARGET_BUCKET = var.s3_bucket_name
     }
   }
