@@ -191,7 +191,7 @@ resource "aws_lambda_function" "render_video" {
   handler            = "lambda_function.lambda_handler"
   runtime            = "python3.9"
   role               = aws_iam_role.lambda_role.arn
-  timeout            = 120
+  timeout            = 180
 
   environment {
     variables = {
@@ -208,7 +208,7 @@ resource "aws_lambda_function" "save_video" {
   handler            = "lambda_function.lambda_handler"
   runtime            = "python3.9"
   role               = aws_iam_role.lambda_role.arn
-  timeout            = 20
+  timeout            = 180
 
   environment {
     variables = {
@@ -261,7 +261,7 @@ resource "aws_lambda_function" "notify_post" {
 
   environment {
     variables = {
-      SNS_TOPIC_ARN = aws_sns_topic.anime_notifications.arn,
+      TEAMS_WEBHOOK_URL = var.teams_webhook_url,
       TARGET_BUCKET = var.s3_bucket_name
     }
   }

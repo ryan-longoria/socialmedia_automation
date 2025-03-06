@@ -35,3 +35,8 @@ variable "terraform_backend_bucket" {
   type        = string
   default     = "animeutopia-backend-bucket"
 }
+
+variable "teams_webhook_url" {
+  description = "The Teams webhook URL used to notify when a new post is ready."
+  type        = string
+}
