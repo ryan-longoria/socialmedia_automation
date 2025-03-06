@@ -1,24 +1,14 @@
 #include "json2.jsx"
 
-var LOG_FILE_PATH = "C:/animeutopia/after_effects_log.txt";
-
-function logMessage(level, message) {
-    var now = new Date();
-    var timestamp = now.toISOString();
-    var logStr = "[" + level + " " + timestamp + "] " + message;
-    $.writeln(logStr);
-
-    var logFile = new File(LOG_FILE_PATH);
-    if (logFile.open("a")) {
-        logFile.writeln(logStr);
-        logFile.close();
-    }
+function logMessage(level, msg) {
+    var t = new Date().toISOString();
+    $.writeln("[" + level + " " + t + "] " + msg);
 }
 
 function downloadFromUrl(url, localPath) {
     try {
-        logMessage("INFO", "Attempting to download: " + url);
-        var socket = new Socket();
+        logMessage("INFO", "Attempting download: " + url);
+        var s = new Socket();
         var urlParts = url.split("://");
         if (urlParts.length < 2) {
             throw new Error("Invalid URL format: " + url);
@@ -27,26 +17,26 @@ function downloadFromUrl(url, localPath) {
         var host = hostAndPath.shift();
         var path = "/" + hostAndPath.join("/");
 
-        if (socket.open(host + ":80", "BINARY")) {
+        if (s.open(host + ":80", "BINARY")) {
             var request = "GET " + path + " HTTP/1.0\r\nHost: " + host + "\r\n\r\n";
-            socket.write(request);
-            var response = socket.read(999999);
-            socket.close();
+            s.write(request);
+            var response = s.read(999999);
+            s.close();
             var parts = response.split("\r\n\r\n");
             if (parts.length < 2) {
                 throw new Error("Invalid HTTP response.");
             }
             var content = parts.slice(1).join("\r\n\r\n");
-            var file = new File(localPath);
-            if (!file.open("w")) {
+            var f = new File(localPath);
+            if (!f.open("w")) {
                 throw new Error("Failed to open local file for writing: " + localPath);
             }
-            file.write(content);
-            file.close();
-            logMessage("INFO", "File downloaded successfully to: " + localPath);
+            f.write(content);
+            f.close();
+            logMessage("INFO", "File downloaded: " + localPath);
             return true;
         } else {
-            throw new Error("Unable to open socket connection to: " + host);
+            throw new Error("Unable to open socket: " + host);
         }
     } catch (e) {
         logMessage("ERROR", "Download failed: " + e.message);
@@ -54,92 +44,99 @@ function downloadFromUrl(url, localPath) {
     }
 }
 
-var s3JsonUrl = "{{PRESIGNED_URL}}";  
-var localJsonPath = "C:/animeutopia/output/most_recent_post.json";
-if (!downloadFromUrl(s3JsonUrl, localJsonPath)) {
-    logMessage("ERROR", "Failed to download JSON from S3.");
-    throw new Error("Failed to download JSON from S3. Exiting script execution.");
-}
+function doJsonUpdates() {
+    var presignedUrl = $.getenv("PRESIGNED_URL");
+    if (!presignedUrl) {
+        logMessage("WARN", "No PRESIGNED_URL found in environment. Skipping JSON updates.");
+        return;
+    }
+    logMessage("INFO", "Got PRESIGNED_URL: " + presignedUrl);
 
-var jsonFile = new File(localJsonPath);
-if (!jsonFile.exists) {
-    throw new Error("JSON file not found at " + localJsonPath);
-}
-jsonFile.open("r");
-var jsonData = jsonFile.read();
-jsonFile.close();
+    var localJsonPath = "C:/animeutopia/output/most_recent_post.json";
+    if (!downloadFromUrl(presignedUrl, localJsonPath)) {
+        logMessage("ERROR", "Failed to download JSON from " + presignedUrl);
+        return;
+    }
 
-var postData;
-try {
-    postData = JSON.parse(jsonData);
-    logMessage("INFO", "JSON data loaded. Title = " + postData.title);
-} catch (e) {
-    logMessage("ERROR", "JSON parse error: " + e.message);
-    throw e;
-}
+    var jsonFile = new File(localJsonPath);
+    if (!jsonFile.exists) {
+        logMessage("ERROR", "JSON file does not exist after download.");
+        return;
+    }
+    jsonFile.open("r");
+    var rawData = jsonFile.read();
+    jsonFile.close();
 
-var projectFilePath = "C:/animeutopia/anime_template.aep";
-var projectFile = new File(projectFilePath);
-if (!projectFile.exists) {
-    throw new Error("After Effects project file not found: " + projectFilePath);
-}
-app.open(projectFile);
-logMessage("INFO", "Opened AE project: " + projectFile.fsName);
+    var postData;
+    try {
+        postData = JSON.parse(rawData);
+    } catch (ex) {
+        logMessage("ERROR", "JSON parse error: " + ex.message);
+        return;
+    }
+    logMessage("INFO", "JSON loaded. Title=" + postData.title);
 
-try {
+    if (!app.project.file) {
+        logMessage("WARN", "No .aep file is open yet, skipping updates.");
+        return;
+    }
+
     var compName = "standard-news-template";
     var comp = null;
     for (var i = 1; i <= app.project.items.length; i++) {
-        var item = app.project.items[i];
-        if (item instanceof CompItem && item.name === compName) {
-            comp = item;
+        var it = app.project.items[i];
+        if (it instanceof CompItem && it.name === compName) {
+            comp = it;
             break;
         }
     }
     if (!comp) {
-        throw new Error("Composition not found: " + compName);
+        logMessage("ERROR", "Comp not found: " + compName);
+        return;
     }
 
     var titleLayer = comp.layer("Title");
-    var descLayer = comp.layer("Description");
-    var bgLayer = comp.layer("BackgroundImage");
+    var descLayer  = comp.layer("Description");
+    var bgLayer    = comp.layer("BackgroundImage");
 
-    if (!titleLayer) throw new Error("Title layer not found.");
-    if (!descLayer) throw new Error("Description layer not found.");
+    if (titleLayer) {
+        titleLayer.property("Source Text").setValue(postData.title || "No Title");
+    }
+    if (descLayer) {
+        descLayer.property("Source Text").setValue(postData.description || "No Description");
+    }
+    logMessage("INFO", "Text layers updated.");
 
-    titleLayer.property("Source Text").setValue(postData.title);
-    descLayer.property("Source Text").setValue(postData.description);
-    logMessage("INFO", "Updated text layers: Title and Description.");
+    if (bgLayer) {
+        var bgFile = new File("C:/animeutopia/output/backgroundimage_converted.jpg");
+        if (bgFile.exists) {
+            logMessage("INFO", "Replacing background with: " + bgFile.fsName);
+            var importOpts = new ImportOptions(bgFile);
+            var newFootage = app.project.importFile(importOpts);
+            bgLayer.replaceSource(newFootage, false);
 
-    var imageFile = new File("C:/animeutopia/output/backgroundimage_converted.jpg");
-    if (imageFile.exists && bgLayer) {
-        logMessage("INFO", "Replacing background image...");
-        var importOpts = new ImportOptions(imageFile);
-        var newFootage = app.project.importFile(importOpts);
-        bgLayer.replaceSource(newFootage, false);
-
-        var compW = comp.width;
-        var compH = comp.height;
-        var layerW = bgLayer.source.width;
-        var layerH = bgLayer.source.height;
-        var scaleX = (compW / layerW) * 100;
-        var scaleY = (compH / layerH) * 100;
-        var scaleFactor = Math.max(scaleX, scaleY);
-        bgLayer.transform.scale.setValue([scaleFactor, scaleFactor]);
-        bgLayer.transform.position.setValue([compW / 2, compH / 2]);
-
-        logMessage("INFO", "Background replaced & scaled.");
-    } else {
-        logMessage("INFO", "No background image replaced (file missing or no BG layer).");
+            var compW = comp.width, compH = comp.height;
+            var lyW   = bgLayer.source.width, lyH = bgLayer.source.height;
+            var scaleX = (compW / lyW) * 100;
+            var scaleY = (compH / lyH) * 100;
+            var scaleVal = Math.max(scaleX, scaleY);
+            bgLayer.transform.scale.setValue([scaleVal, scaleVal]);
+            bgLayer.transform.position.setValue([compW / 2, compH / 2]);
+            logMessage("INFO", "Background replaced & scaled.");
+        }
     }
 
-    var updatedProjectFile = new File("C:/animeutopia/output/anime_template_updated.aep");
-    app.project.save(updatedProjectFile);
-    logMessage("INFO", "Project updated & saved: " + updatedProjectFile.fsName);
-
-} catch (e) {
-    logMessage("ERROR", "Error updating layers: " + e.message);
-    throw e;
+    logMessage("INFO", "Dynamic JSON updates complete. The comp is updated in memory.");
 }
 
-logMessage("INFO", "ExtendScript finished updates. Ready for aerender.");
+(function main() {
+    function handleProjectOpen(evt) {
+        doJsonUpdates();
+    }
+
+    if (app.project.file) {
+        doJsonUpdates();
+    } else {
+        app.eventListeners.add("afterProjectOpen", handleProjectOpen);
+    }
+})();
