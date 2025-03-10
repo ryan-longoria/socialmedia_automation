@@ -2,49 +2,6 @@
 ## Step Functions
 ################################################################################
 
-#############################
-# IAM Role for Step Functions
-#############################
-resource "aws_iam_role" "step_functions_role" {
-  name = "anime_step_functions_role"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [{
-      Action    = "sts:AssumeRole",
-      Effect    = "Allow",
-      Principal = { Service = "states.amazonaws.com" }
-    }]
-  })
-}
-
-# Policy allowing Step Functions to invoke Lambda functions
-resource "aws_iam_policy" "step_functions_policy" {
-  name        = "anime_step_functions_policy"
-  description = "Policy for Step Functions to invoke Lambda functions"
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Action = [
-          "lambda:InvokeFunction",
-          "lambda:InvokeAsync"
-        ],
-        Resource = [
-          aws_lambda_function.fetch_rss.arn,
-          aws_lambda_function.process_content.arn,
-          aws_lambda_function.store_data.arn,
-          aws_lambda_function.render_video.arn,
-          aws_lambda_function.save_video.arn,
-          aws_lambda_function.start_instance.arn,
-          aws_lambda_function.stop_instance.arn,
-          aws_lambda_function.notify_post.arn
-        ]
-      }
-    ]
-  })
-}
-
 resource "aws_iam_role_policy_attachment" "attach_step_functions_policy" {
   role       = aws_iam_role.step_functions_role.name
   policy_arn = aws_iam_policy.step_functions_policy.arn
