@@ -100,8 +100,32 @@ def lambda_handler(event, context):
         return {"error": error_msg}
 
     commands = [
-        f'cd "C:\\animeutopia\\output" && aws s3 cp "anime_post.mp4" "s3://{target_bucket}/anime_post.mp4"',
-        f'cd "C:\\animeutopia\\output" && aws s3 cp "anime_template_exported.aep" "s3://{target_bucket}/exports/anime_template_exported.aep"'
+        r'''
+        $maxWait = 600; $waitTime = 10; $count = 0;
+        while (!(Test-Path "C:\animeutopia\output\anime_post.mp4") -and ($count -lt $maxWait)) {
+            Write-Output "Waiting for anime_post.mp4 to be generated...";
+            Start-Sleep -Seconds $waitTime;
+            $count += $waitTime;
+        }
+        if (Test-Path "C:\animeutopia\output\anime_post.mp4") {
+            aws s3 cp "C:\animeutopia\output\anime_post.mp4" "s3://{target_bucket}/anime_post.mp4";
+        } else {
+            Write-Error "File anime_post.mp4 does not exist after waiting.";
+        }
+        ''',
+        r'''
+        $maxWait = 600; $waitTime = 10; $count = 0;
+        while (!(Test-Path "C:\animeutopia\output\anime_template_exported.aep") -and ($count -lt $maxWait)) {
+            Write-Output "Waiting for anime_template_exported.aep to be generated...";
+            Start-Sleep -Seconds $waitTime;
+            $count += $waitTime;
+        }
+        if (Test-Path "C:\animeutopia\output\anime_template_exported.aep") {
+            aws s3 cp "C:\animeutopia\output\anime_template_exported.aep" "s3://{target_bucket}/exports/anime_template_exported.aep";
+        } else {
+            Write-Error "File anime_template_exported.aep does not exist after waiting.";
+        }
+        '''
     ]
 
 
