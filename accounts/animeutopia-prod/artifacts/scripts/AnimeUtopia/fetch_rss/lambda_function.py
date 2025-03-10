@@ -4,17 +4,7 @@ import logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-
 def get_first_post_if_anime(feed):
-    """Retrieve the first anime-related entry from the RSS feed.
-
-    Args:
-        feed (FeedParserDict): Parsed RSS feed.
-
-    Returns:
-        dict or None: Dictionary containing post details if the first entry
-                      is anime-related; otherwise, None.
-    """
     try:
         if feed.entries:
             first = feed.entries[0]
@@ -31,17 +21,7 @@ def get_first_post_if_anime(feed):
         logger.exception("Error processing feed entries: %s", error)
     return None
 
-
 def lambda_handler(event, context):
-    """Fetch the RSS feed and determine if the first post is anime-related.
-
-    Args:
-        event (dict): Lambda event data.
-        context (object): Lambda context object.
-
-    Returns:
-        dict: Dictionary with a status and post details if an anime post is found.
-    """
     feed_url = "https://www.animenewsnetwork.com/newsroom/rss.xml"
     feed = feedparser.parse(feed_url)
 

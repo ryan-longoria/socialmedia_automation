@@ -76,9 +76,18 @@ def lambda_handler(event, context):
         return {"error": str(e)}
     
     ps_command = f'''
-$Env:PRESIGNED_URL = "{presigned_url}"
-aerender.exe -project "C:\\animeutopia\\anime_template.aep" -comp "standard-news-template" -output "C:\\animeutopia\\output\\anime_post.mp4"
+    Write-Host "Checking aerender version..."
+    & aerender.exe -version
+
+    Write-Host "Setting environment variable for most_recent_post.json..."
+    $Env:PRESIGNED_URL = "{presigned_url}"
+
+    Write-Host "Starting After Effects render..."
+    & aerender.exe -project "C:\\animeutopia\\anime_template.aep" `
+                -comp "standard-news-template" `
+                -output "C:\\animeutopia\\output\\anime_post.mp4"
     '''
+
     
     try:
         ssm_response = ssm.send_command(
