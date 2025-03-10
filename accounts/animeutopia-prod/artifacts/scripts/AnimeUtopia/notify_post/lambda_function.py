@@ -1,28 +1,15 @@
 import os
 import logging
 import boto3
-from datetime import datetime, timezone
 import uuid
 import json
-
 import requests
+from datetime import datetime, timezone
 
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
-    """
-    Generates two pre-signed URLs and posts a message with both links
-    to a Microsoft Teams channel via an Incoming Webhook.
-    
-    Environment Variables:
-      - TARGET_BUCKET: Name of the S3 bucket where files are stored.
-      - TEAMS_WEBHOOK_URL: Webhook URL for the Microsoft Teams channel.
-    
-    Returns:
-      dict: A dictionary containing the status, video_url, project_url, 
-            keys used or an error message.
-    """
     bucket = os.environ.get("TARGET_BUCKET")
     if not bucket:
         error_msg = "TARGET_BUCKET environment variable not set."
@@ -36,17 +23,17 @@ def lambda_handler(event, context):
         return {"error": error_msg}
 
     s3 = boto3.client("s3")
-
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d%H%M%S")
     unique_id = uuid.uuid4().hex
-    video_key = f"anime_post_{timestamp}_{unique_id}.mp4"
-    project_key = f"exports/anime_template_exported_{timestamp}_{unique_id}.aep"
+
+    video_key = event.get("videoResult", {}).get("video_s3_key", f"anime_post_{timestamp}_{unique_id}.mp4")
+    project_key = event.get("project_key", f"exports/anime_template_exported_{timestamp}_{unique_id}.aep")
 
     try:
         video_url = s3.generate_presigned_url(
             "get_object",
             Params={"Bucket": bucket, "Key": video_key},
-            ExpiresIn=604800 
+            ExpiresIn=604800
         )
     except Exception as e:
         logger.exception("Error generating presigned URL for video file: %s", e)
@@ -69,7 +56,7 @@ def lambda_handler(event, context):
     )
 
     teams_payload = {
-        "text": message_text 
+        "text": message_text
     }
 
     try:
