@@ -52,7 +52,7 @@ resource "aws_lambda_function" "store_data" {
   timeout            = 10
   environment {
     variables = {
-      BUCKET_NAME = var._s3_bucket_name
+      BUCKET_NAME = var.s3_bucket_name
     }
   }
 }
@@ -71,7 +71,7 @@ resource "aws_lambda_function" "render_video" {
   timeout            = 180
   environment {
     variables = {
-      TARGET_BUCKET = var._s3_bucket_name
+      TARGET_BUCKET = var.s3_bucket_name
     }
   }
 }
@@ -91,7 +91,7 @@ resource "aws_lambda_function" "notify_post" {
   environment {
     variables = {
       TEAMS_WEBHOOK_URL = var.teams_webhook_url,
-      TARGET_BUCKET   = var._s3_bucket_name
+      TARGET_BUCKET   = var.s3_bucket_name
     }
   }
 }
