@@ -88,3 +88,37 @@ resource "aws_iam_role_policy" "step_functions_policy" {
     ]
   })
 }
+
+#############################
+# IAM Policy for CloudWatch/EventBridge
+#############################
+
+resource "aws_iam_role" "eventbridge_role" {
+  name = "eventbridge_step_functions_role"
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Action    = "sts:AssumeRole",
+      Effect    = "Allow",
+      Principal = { Service = "events.amazonaws.com" }
+    }]
+  })
+}
+
+resource "aws_iam_policy" "eventbridge_policy" {
+  name        = "eventbridge_step_functions_policy"
+  description = "Policy for CloudWatch Event to start Step Functions executions"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [{
+      Effect   = "Allow",
+      Action   = "states:StartExecution",
+      Resource = aws_sfn_state_machine.anime_workflow.arn
+    }]
+  })
+}
+
+resource "aws_iam_role_policy_attachment" "attach_eventbridge_policy" {
+  role       = aws_iam_role.eventbridge_role.name
+  policy_arn = aws_iam_policy.eventbridge_policy.arn
+}
