@@ -2,7 +2,10 @@
 ## Lambda
 ################################################################################
 
-# Lambda: fetch_rss
+#############################
+# fetch_rss
+#############################
+
 resource "aws_lambda_function" "fetch_rss" {
   function_name      = "fetch_rss"
   filename           = "${path.module}/artifacts/fetch_rss.zip"
@@ -13,7 +16,10 @@ resource "aws_lambda_function" "fetch_rss" {
   timeout            = 10
 }
 
-# Lambda: process_content
+#############################
+# process_content
+#############################
+
 resource "aws_lambda_function" "process_content" {
   function_name      = "process_content"
   filename           = "${path.module}/artifacts/process_content.zip"
@@ -32,7 +38,10 @@ resource "aws_lambda_function" "process_content" {
   ]
 }
 
-# Lambda: store_data
+#############################
+# store_data
+#############################
+
 resource "aws_lambda_function" "store_data" {
   function_name      = "store_data"
   filename           = "${path.module}/artifacts/store_data.zip"
@@ -48,7 +57,10 @@ resource "aws_lambda_function" "store_data" {
   }
 }
 
-# Lambda: render_video (using MoviePy)
+#############################
+# render_video
+#############################
+
 resource "aws_lambda_function" "render_video" {
   function_name      = "render_video"
   filename           = "${path.module}/artifacts/render_video.zip"
@@ -62,11 +74,12 @@ resource "aws_lambda_function" "render_video" {
       TARGET_BUCKET = var.media_bucket
     }
   }
-  # Optionally attach a MoviePy/FFmpeg layer if needed:
-  # layers = [ aws_lambda_layer_version.moviepy_layer.arn ]
 }
 
-# Lambda: notify_post
+#############################
+# notify_post
+#############################
+
 resource "aws_lambda_function" "notify_post" {
   function_name      = "notify_post"
   filename           = "${path.module}/artifacts/notify_post.zip"
