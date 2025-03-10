@@ -6,22 +6,10 @@ import boto3
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
-BUCKET_NAME = os.environ.get("BUCKET_NAME", "your-s3-bucket")
-
+BUCKET_NAME = os.environ.get("BUCKET_NAME", "animeutopia-bucket")
 s3 = boto3.client("s3")
 
-
 def lambda_handler(event, context):
-    """
-    Store the processed post data in S3 as a JSON file.
-
-    Args:
-        event (dict): Event data containing a 'post' key with post details.
-        context (object): Lambda context object.
-
-    Returns:
-        dict: Dictionary indicating storage status and S3 key used.
-    """
     post = event.get("post")
     if not post:
         post = event.get("processedContent", {}).get("post", {})
